@@ -300,8 +300,34 @@ app.get('/api/classes', async (req, res) => {
 // add a class
 app.post('/api/classes', async (req, res) => {
   try {
+    let roomId = req.body.roomId;
+    
+    if (!roomId && req.body.roomNumber) {
+      // look up room by room_number
+      const room = await db.collection('rooms').findOne({ room_number: req.body.roomNumber });
+      
+      if (room) {
+        roomId = room._id;
+      } else {
+        // create room if it doesn't exist
+        const newRoom = {
+          floor: req.body.floor || 1,
+          building: req.body.building || 'Unknown Building',
+          capacity: req.body.capacity || 30,
+          room_type: req.body.roomType || 'Unknown Type',
+          room_number: req.body.roomNumber,
+        };
+        const roomResult = await db.collection('rooms').insertOne(newRoom);
+        roomId = roomResult.insertedId;
+      }
+    }
+    
+    if (!roomId) {
+      return res.status(400).json({ error: 'roomId or roomNumber is required' });
+    }
+
     const classObj = {
-      roomId: req.body.roomId,
+      roomId: new ObjectId(roomId),
       className: req.body.className,
       days: req.body.days, // Array: ["Monday", "Wednesday"]
       startTime: req.body.startTime,
