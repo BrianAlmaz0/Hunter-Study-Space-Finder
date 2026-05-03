@@ -15,6 +15,7 @@ interface FavoritesScreenProps {
   favorites: string[];
   onRoomSelect: (room: Room) => void;
   isDesktop: boolean;
+  rooms?: Room[];
 }
 
 const mockRooms: Room[] = [
@@ -83,8 +84,32 @@ function formatAvailability(minutes: number): string {
   return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
 }
 
-export function FavoritesScreen({ favorites, onRoomSelect, isDesktop }: FavoritesScreenProps) {
-  const favoriteRooms = mockRooms.filter((room) => favorites.includes(room.id));
+// add a room to favorites
+const addFavorite = (roomId: string): void => {
+  const stored = localStorage.getItem('favoriteRooms');
+  const favorites: string[] = stored ? JSON.parse(stored) : [];
+  if (!favorites.includes(roomId)) {
+    favorites.push(roomId);
+    localStorage.setItem('favoriteRooms', JSON.stringify(favorites));
+  }
+};
+
+// remove a room from favorites
+const removeFavorite = (roomId: string): void => {
+  const stored = localStorage.getItem('favoriteRooms');
+  const favorites: string[] = stored ? JSON.parse(stored) : [];
+  const updated = favorites.filter(id => id !== roomId);
+  localStorage.setItem('favoriteRooms', JSON.stringify(updated));
+};
+
+// get all favorites
+const getFavorites = (): string[] => {
+  const stored = localStorage.getItem('favoriteRooms');
+  return stored ? JSON.parse(stored) : [];
+};
+
+export function FavoritesScreen({ favorites, onRoomSelect, isDesktop, rooms = mockRooms }: FavoritesScreenProps) {
+  const favoriteRooms = rooms.filter((room) => favorites.includes(room.id));
 
   return (
     <div className={`min-h-full ${isDesktop ? 'px-12 py-10' : 'px-6 py-6'}`}>

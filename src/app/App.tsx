@@ -8,6 +8,13 @@ import { motion, AnimatePresence } from 'motion/react';
 
 type Screen = 'home' | 'results' | 'detail' | 'favorites';
 
+interface SearchFilters {
+  building?: string;
+  roomType?: string;
+  day: string;
+  time: string;
+}
+
 interface Room {
   id: string;
   building: string;
@@ -24,6 +31,8 @@ export default function App() {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [searchResults, setSearchResults] = useState<Room[]>([]);
+  const [allRooms, setAllRooms] = useState<Room[]>([]);
 
   useEffect(() => {
     const checkWidth = () => {
@@ -34,8 +43,177 @@ export default function App() {
     return () => window.removeEventListener('resize', checkWidth);
   }, []);
 
-  const handleSearch = () => {
-    setCurrentScreen('results');
+  useEffect(() => {
+    const stored = localStorage.getItem('favoriteRooms');
+    if (stored) {
+      try {
+        setFavorites(JSON.parse(stored));
+      } catch (error) {
+        console.error('Error loading favorites:', error);
+      }
+    }
+  }, []);
+
+  // Map backend room data to frontend Room interface
+  const mapBackendRoom = (backendRoom: any): Room => ({
+    id: backendRoom._id || backendRoom.id,
+    building: backendRoom.building,
+    roomNumber: backendRoom.room_number,
+    floor: backendRoom.floor,
+    availableFor: backendRoom.availableFor || 120, // Default availability
+    nextClass: backendRoom.nextClass || 'Not scheduled',
+    type: backendRoom.room_type || 'room',
+    capacity: backendRoom.capacity,
+  });
+
+  // calculate next class and availability for a room based on a given day and time
+  const calculateNextClassAndAvailability = (classes: any[], searchDay: string, searchTime: string): { nextClass: string; availableFor: number } => {
+    const currentMinutes = parseInt(searchTime.split(':')[0]) * 60 + parseInt(searchTime.split(':')[1]);
+    
+    const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const currentDayIndex = daysOfWeek.indexOf(searchDay);
+
+    let nextClass: any = null;
+    let minTimeDiff = Infinity;
+
+    // check all classes and find the next one
+    classes.forEach((cls: any) => {
+      cls.days.forEach((dayName: string) => {
+        const dayIndex = daysOfWeek.indexOf(dayName);
+        const [startHour, startMin] = cls.startTime.split(':').map(Number);
+        const classMinutes = startHour * 60 + startMin;
+
+        let timeDiff = 0;
+        let isToday = false;
+
+        if (dayIndex === currentDayIndex) {
+          // same day - check if it's in the future
+          timeDiff = classMinutes - currentMinutes;
+          isToday = true;
+        } else if (dayIndex > currentDayIndex) {
+          // later this week
+          const daysUntil = dayIndex - currentDayIndex;
+          timeDiff = daysUntil * 1440 + (classMinutes - currentMinutes); // 1440 min per day
+        } else {
+          // next week
+          const daysUntil = (7 - currentDayIndex) + dayIndex;
+          timeDiff = daysUntil * 1440 + (classMinutes - currentMinutes);
+        }
+
+        // Find the nearest future class
+        if (timeDiff > 0 && timeDiff < minTimeDiff) {
+          minTimeDiff = timeDiff;
+          nextClass = { ...cls, dayName, timeDiffMinutes: timeDiff, isToday };
+        }
+      });
+    });
+
+    const nextClassDisplay = nextClass
+      ? nextClass.isToday
+        ? new Date(`2000-01-01 ${nextClass.startTime}`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+        : `${nextClass.dayName} ${new Date(`2000-01-01 ${nextClass.startTime}`).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`
+      : 'Not scheduled';
+
+    const availableFor = nextClass?.timeDiffMinutes || 120;
+
+    return { nextClass: nextClassDisplay, availableFor };
+  };
+
+  // get all rooms for favorites display/results screen on initial load
+  useEffect(() => {
+    const fetchAllRooms = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/rooms');
+        if (!response.ok) throw new Error('Failed to fetch rooms');
+        const rooms = await response.json();
+        const mappedRooms = rooms.map(mapBackendRoom);
+        setAllRooms(mappedRooms);
+      } catch (error) {
+        console.error('Error fetching rooms:', error);
+      }
+    };
+
+    const fetchCurrentAvailableRooms = async () => {
+      try {
+        const now = new Date();
+        const day = now.toLocaleString('en-US', { weekday: 'long' });
+        const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+        
+        const params = new URLSearchParams({ day, time });
+        const response = await fetch(`http://localhost:5000/api/available-rooms?${params}`);
+        
+        if (!response.ok) throw new Error('Failed to fetch available rooms');
+        const rooms = await response.json();
+        const mappedRooms = rooms.map(mapBackendRoom);
+
+        // get classes for each room to calculate availability and next class
+        const results = await Promise.all(
+          mappedRooms.map(async (room : Room) => {
+            try {
+              const classRes = await fetch(`http://localhost:5000/api/rooms/${room.id}/classes`);
+              if (!classRes.ok) throw new Error('Failed to fetch classes');
+              const classes = await classRes.json();
+              const { nextClass, availableFor } = calculateNextClassAndAvailability(classes, day, time);
+              return { ...room, nextClass, availableFor };
+            } catch (error) {
+              console.error(`Error fetching classes for room ${room.id}:`, error);
+              return room;
+            }
+          })
+        );
+        
+        setSearchResults(results);
+      } catch (error) {
+        console.error('Error fetching current available rooms:', error);
+      }
+    };
+
+    fetchAllRooms();
+    fetchCurrentAvailableRooms();
+  }, []);
+
+  const handleSearch = async (filters: SearchFilters) => {
+    try {
+      const params = new URLSearchParams({
+        day: filters.day,
+        time: filters.time,
+      });
+      if (filters.building) {
+        params.append('building', filters.building);
+      }
+      if (filters.roomType) {
+        params.append('room_type', filters.roomType);
+      }
+
+      const response = await fetch(`http://localhost:5000/api/filter-rooms?${params}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch rooms');
+      }
+      const results = await response.json();
+      const mappedResults = results.map(mapBackendRoom);
+      
+      const data = await Promise.all(
+        mappedResults.map(async (room : Room) => {
+          try {
+            // get classes for a specific room for availability calculation
+            const classRes = await fetch(`http://localhost:5000/api/rooms/${room.id}/classes`);
+            if (!classRes.ok) throw new Error('Failed to fetch classes');
+            const classes = await classRes.json();
+            const { nextClass, availableFor } = calculateNextClassAndAvailability(classes, filters.day, filters.time);
+            return { ...room, nextClass, availableFor };
+          } catch (error) {
+            console.error(`Error fetching classes for room ${room.id}:`, error);
+            return room;
+          }
+        })
+      );
+      
+      setSearchResults(data);
+      setCurrentScreen('results');
+    } catch (error) {
+      console.error('Search error:', error);
+    }
   };
 
   const handleRoomSelect = (room: Room) => {
@@ -50,11 +228,15 @@ export default function App() {
   };
 
   const toggleFavorite = (roomId: string) => {
-    setFavorites(prev =>
-      prev.includes(roomId)
+    setFavorites(prev => {
+      const isFav = prev.includes(roomId);
+      const updated = isFav
         ? prev.filter(id => id !== roomId)
-        : [...prev, roomId]
-    );
+        : [...prev, roomId];
+      // add to local storage
+      localStorage.setItem('favoriteRooms', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const isFavorite = (roomId: string) => favorites.includes(roomId);
@@ -143,6 +325,7 @@ export default function App() {
                   onRoomSelect={handleRoomSelect}
                   favorites={favorites}
                   isDesktop={true}
+                  rooms={searchResults}
                 />
               </motion.div>
             )}
@@ -185,6 +368,7 @@ export default function App() {
                   favorites={favorites}
                   onRoomSelect={handleRoomSelect}
                   isDesktop={true}
+                  rooms={allRooms}
                 />
               </motion.div>
             )}
@@ -237,6 +421,7 @@ export default function App() {
                 onRoomSelect={handleRoomSelect}
                 favorites={favorites}
                 isDesktop={false}
+                rooms={searchResults}
               />
             </motion.div>
           )}
@@ -270,6 +455,7 @@ export default function App() {
                 favorites={favorites}
                 onRoomSelect={handleRoomSelect}
                 isDesktop={false}
+                rooms={allRooms}
               />
             </motion.div>
           )}
