@@ -15,6 +15,7 @@ interface ResultsScreenProps {
   onRoomSelect: (room: Room) => void;
   favorites: string[];
   isDesktop: boolean;
+  rooms?: Room[];
 }
 
 const mockRooms: Room[] = [
@@ -83,7 +84,7 @@ function formatAvailability(minutes: number): string {
   return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
 }
 
-export function ResultsScreen({ onRoomSelect, favorites, isDesktop }: ResultsScreenProps) {
+export function ResultsScreen({ onRoomSelect, favorites, isDesktop, rooms = mockRooms }: ResultsScreenProps) {
   return (
     <div className={`min-h-full ${isDesktop ? 'px-12 py-10' : 'px-6 py-6'}`}>
       <div className={isDesktop ? 'max-w-6xl mx-auto' : 'max-w-md mx-auto'}>
@@ -91,13 +92,13 @@ export function ResultsScreen({ onRoomSelect, favorites, isDesktop }: ResultsScr
         <div className={isDesktop ? 'mb-8' : 'mb-6'}>
           <h2 className={`${isDesktop ? 'text-3xl' : 'text-2xl'} mb-1 text-foreground`}>Available Rooms</h2>
           <p className={`${isDesktop ? 'text-base' : 'text-sm'} text-muted-foreground`}>
-            {mockRooms.length} rooms available right now
+            {rooms.length} rooms available right now
           </p>
         </div>
 
         {/* Results List */}
         <div className={isDesktop ? 'grid grid-cols-2 gap-4' : 'space-y-3'}>
-          {mockRooms.map((room, index) => (
+          {rooms.map((room, index) => (
             <motion.button
               key={room.id}
               initial={{ opacity: 0, y: 10 }}
@@ -148,9 +149,11 @@ export function ResultsScreen({ onRoomSelect, favorites, isDesktop }: ResultsScr
                     <div className="text-2xl leading-none mb-0.5">
                       {formatAvailability(room.availableFor).split(' ')[0]}
                     </div>
-                    <div className="text-xs opacity-90">
-                      {formatAvailability(room.availableFor).split(' ')[1] || 'available'}
-                    </div>
+                    {formatAvailability(room.availableFor).split(' ')[1] && (
+                      <div className="text-xs opacity-90">
+                        {formatAvailability(room.availableFor).split(' ')[1]}
+                      </div>
+                    )}
                   </motion.div>
 
                   {favorites.includes(room.id) && (
