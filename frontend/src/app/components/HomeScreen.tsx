@@ -4,6 +4,9 @@ import { MapPin, Clock, Grid3x3 } from 'lucide-react';
 interface HomeScreenProps {
   onSearch: (filters: SearchFilters) => void;
   isDesktop: boolean;
+  buildings?: string[];
+  isSearching?: boolean;
+  searchError?: string | null;
 }
 
 interface SearchFilters {
@@ -13,33 +16,37 @@ interface SearchFilters {
   time: string;
 }
 
-export function HomeScreen({ onSearch, isDesktop }: HomeScreenProps) {
+const DEFAULT_BUILDINGS = [
+  'North Building',
+  'West Building',
+  'East Building',
+  'Thomas Hunter Hall',
+  'Baker Building',
+  'Silberman',
+  'Roosevelt House',
+];
+
+export function HomeScreen({ onSearch, isDesktop, buildings, isSearching = false, searchError = null }: HomeScreenProps) {
   const [building, setBuilding] = useState('');
   const [timeFilter, setTimeFilter] = useState('now');
   const [roomType, setRoomType] = useState('all');
   const [selectedDay, setSelectedDay] = useState(new Date().toLocaleString('en-US', { weekday: 'long' }));
   const [selectedTime, setSelectedTime] = useState(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }));
 
-  const buildings = [
-    'North Building',
-    'West Building',
-    'East Building',
-    'Thomas Hunter Hall',
-  ];
+  const buildingList = (buildings && buildings.length > 0) ? buildings : DEFAULT_BUILDINGS;
 
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   const handleSearch = () => {
     const filters: SearchFilters = {
-      day: timeFilter === 'now' ? new Date().toLocaleString('en-US', { weekday: 'long' }) : selectedDay,
-      time: timeFilter === 'now' ? new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : selectedTime,
+      day:  timeFilter === 'now'
+        ? new Date().toLocaleString('en-US', { weekday: 'long' })
+        : selectedDay,
+      time: timeFilter === 'now'
+        ? new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
+        : selectedTime,
     };
-    if (building) {
-      filters.building = building;
-    }
-    if (roomType !== 'all') {
-      filters.roomType = roomType;
-    }
+    if (building) filters.building = building;
     onSearch(filters);
   };
 
@@ -70,7 +77,7 @@ export function HomeScreen({ onSearch, isDesktop }: HomeScreenProps) {
               className="w-full px-4 py-3.5 bg-white border border-border rounded-xl appearance-none cursor-pointer hover:border-[#2563eb]/50 transition-colors"
             >
               <option value="">Select a building</option>
-              {buildings.map((b) => (
+              {buildingList.map((b) => (
                 <option key={b} value={b}>
                   {b}
                 </option>
@@ -161,10 +168,15 @@ export function HomeScreen({ onSearch, isDesktop }: HomeScreenProps) {
         {/* Search Button */}
         <button
           onClick={handleSearch}
-          className="w-full mt-8 px-6 py-4 bg-[#2563eb] text-white rounded-xl hover:bg-[#1d4ed8] transition-colors shadow-sm"
+          disabled={isSearching}
+          className="w-full mt-8 px-6 py-4 bg-[#2563eb] text-white rounded-xl hover:bg-[#1d4ed8] transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          Search Available Rooms
+          {isSearching ? 'Searching...' : 'Search Available Rooms'}
         </button>
+
+        {searchError && (
+          <p className="mt-3 text-sm text-red-500 text-center">{searchError}</p>
+        )}
 
         {/* Quick Stats */}
         <div className={`${isDesktop ? 'mt-16 pt-12' : 'mt-12 pt-8'} border-t border-border`}>

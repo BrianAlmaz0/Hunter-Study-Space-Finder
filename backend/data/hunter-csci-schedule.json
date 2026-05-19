@@ -1,0 +1,413 @@
+[
+  {
+    "classNumber": null,
+    "section": "01-LEC Regular",
+    "courseTopic": "Introduction: Computer Science",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Tiziana Ligorio",
+      "Katherine St. John"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "Tu 10:00AM - 11:15AM",
+      "Tu 10:00AM - 11:15AM"
+    ],
+    "room": "North Bldg 118"
+  },
+  {
+    "classNumber": null,
+    "section": "02-LEC Regular",
+    "courseTopic": "Programing for Everyone",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Manuel Reyes"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "TuTh 11:30AM - 12:45PM"
+    ],
+    "room": "North Bldg 1001C"
+  },
+  {
+    "classNumber": null,
+    "section": "01-LEC Regular",
+    "courseTopic": "Software Analysis and Design 1",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Tong Yi"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "MoWe 1:00PM - 2:15PM"
+    ],
+    "room": "North Bldg 118"
+  },
+  {
+    "classNumber": null,
+    "section": "01-LEC Regular",
+    "courseTopic": "Discrete Structures",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Raj Korpan"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "TuTh 2:30PM - 3:45PM"
+    ],
+    "room": "North Bldg 118"
+  },
+  {
+    "classNumber": null,
+    "section": "01-LEC Regular",
+    "courseTopic": "Computer Architecture 1",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Melissa Lynch"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "TuTh 11:30AM - 12:45PM"
+    ],
+    "room": "West Bldg W615"
+  },
+  {
+    "classNumber": null,
+    "section": "01-LEC Regular",
+    "courseTopic": "Programming Methods",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Zilolakhon Samigjonova"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "Fr 10:00AM - 11:15AM"
+    ],
+    "room": "North Bldg 1001E"
+  },
+  {
+    "classNumber": null,
+    "section": "02-LEC Regular",
+    "courseTopic": "Rel Databases & SQL Programg",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Jaime Canizales"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "MoWe 10:00AM - 11:15AM"
+    ],
+    "room": "North Bldg 1001B"
+  },
+  {
+    "classNumber": null,
+    "section": "01-LEC Regular",
+    "courseTopic": "Software Analysis and Design 2",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Oyewole Oyekoya"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "MoWe 10:00AM - 11:15AM"
+    ],
+    "room": "West Bldg W714"
+  },
+  {
+    "classNumber": null,
+    "section": "01-LEC Regular",
+    "courseTopic": "Computer Architecture 2",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Subash Shankar"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "TuTh 7:00PM - 8:15PM"
+    ],
+    "room": "West Bldg W714"
+  },
+  {
+    "classNumber": null,
+    "section": "01-LEC Regular",
+    "courseTopic": "Computer Theory 1",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Justin Tojeira"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "MoWe 5:30PM - 6:45PM"
+    ],
+    "room": "West Bldg W714"
+  },
+  {
+    "classNumber": null,
+    "section": "01-LEC Regular",
+    "courseTopic": "Software Analysis and Design 3",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Ioannis Stamos"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "TuTh 10:00AM - 11:15AM"
+    ],
+    "room": "West Bldg W714"
+  },
+  {
+    "classNumber": null,
+    "section": "01-LEC Regular",
+    "courseTopic": "Operating Systems",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Pavel Shostak"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "TuTh 5:30PM - 6:45PM"
+    ],
+    "room": "West Bldg W714"
+  },
+  {
+    "classNumber": null,
+    "section": "01-LEC Regular",
+    "courseTopic": "Intro to Linear Programming",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Ben Rosenberg"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "MoWe 7:00PM - 8:15PM"
+    ],
+    "room": "North Bldg 1001F"
+  },
+  {
+    "classNumber": null,
+    "section": "01-LEC Regular",
+    "courseTopic": "Computer Theory 2",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Eric Schweitzer"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "MoWe 7:00PM - 8:15PM"
+    ],
+    "room": "North Bldg 1001E"
+  },
+  {
+    "classNumber": null,
+    "section": "01-LEC Regular",
+    "courseTopic": "Non-Classical Logic",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Yuna Won"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "TuTh 11:30AM - 12:45PM"
+    ],
+    "room": "North Bldg C102"
+  },
+  {
+    "classNumber": null,
+    "section": "01-LEC Regular",
+    "courseTopic": "Basics of Game Engines",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Pavel Shostak"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "TuTh 4:00PM - 5:15PM"
+    ],
+    "room": "North Bldg 1001C"
+  },
+  {
+    "classNumber": null,
+    "section": "01-LEC Regular",
+    "courseTopic": "Data Visualization",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Ryan Vaz"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "TuTh 7:00PM - 8:15PM"
+    ],
+    "room": "North Bldg 1001E"
+  },
+  {
+    "classNumber": null,
+    "section": "01-LEC Regular",
+    "courseTopic": "Undergrad Research Training",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Susan Epstein"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "MoWe 1:00PM - 2:15PM"
+    ],
+    "room": "North Bldg 1000J"
+  },
+  {
+    "classNumber": null,
+    "section": "01-LEC Regular",
+    "courseTopic": "Computatnl Ling",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Alexandra Salem",
+      "Mohammadmahdi Shokri"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "Mo 5:30PM - 8:15PM",
+      "Mo 5:30PM - 8:15PM"
+    ],
+    "room": "North Bldg 1001D"
+  },
+  {
+    "classNumber": null,
+    "section": "01-LEC Regular",
+    "courseTopic": "Algorithm Design & Analysis",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Saadeddine Mneimneh"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "MoWe 5:30PM - 6:45PM"
+    ],
+    "room": "North Bldg 1001F"
+  },
+  {
+    "classNumber": null,
+    "section": "02-LEC Regular",
+    "courseTopic": "Big Data Technology",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Arezoo Bybordi"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "Fr 5:00PM - 7:30PM"
+    ],
+    "room": "North Bldg 1001D"
+  },
+  {
+    "classNumber": null,
+    "section": "01-LEC Regular",
+    "courseTopic": "Intro to Computer Security",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Sven Dietrich"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "MoWe 11:30AM - 12:45PM"
+    ],
+    "room": "North Bldg 1001D"
+  },
+  {
+    "classNumber": null,
+    "section": "01-LEC Regular",
+    "courseTopic": "Non-Standard Computers",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Eric Schweitzer"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "MoWe 5:30PM - 6:45PM"
+    ],
+    "room": "North Bldg 1001E"
+  },
+  {
+    "classNumber": null,
+    "section": "01-SEM Regular",
+    "courseTopic": "Advanced Operating Systems",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Ping Ji"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "We 5:30PM - 8:15PM"
+    ],
+    "room": "North Bldg 1000C"
+  },
+  {
+    "classNumber": null,
+    "section": "01-LEC Regular",
+    "courseTopic": "Cloud Dbse Securiy & Integrity",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Saptarshi Debroy"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "Th 5:30PM - 8:15PM"
+    ],
+    "room": "North Bldg 1001F"
+  },
+  {
+    "classNumber": null,
+    "section": "01-LEC Regular",
+    "courseTopic": "Computational Linguistics",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Alexandra Salem",
+      "Mohammadmahdi Shokri"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "Mo 5:30PM - 8:15PM",
+      "Mo 5:30PM - 8:15PM"
+    ],
+    "room": "North Bldg 1001D"
+  },
+  {
+    "classNumber": null,
+    "section": "01-SEM Regular",
+    "courseTopic": "Advanced Operating Systems",
+    "status": null,
+    "instructionMode": "In Person",
+    "instructor": [
+      "Ping Ji"
+    ],
+    "meetingDates": "01/26/2026 - 05/26/2026",
+    "daysAndTimes": [
+      "We 5:30PM - 8:15PM"
+    ],
+    "room": "North Bldg 1000C"
+  }
+]
