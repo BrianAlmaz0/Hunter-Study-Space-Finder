@@ -98,20 +98,40 @@ function minutesToTimeStr(minutes) {
 // ── Load + preprocess schedule ─────────────────────────────────────────────────
 
 let schedule = [];
-try {
-  const raw = JSON.parse(
-    readFileSync(path.join(__dirname, 'data', 'hunter-all-subjects-schedule.json'), 'utf8')
-  );
-  schedule = raw
+
+function processRaw(raw) {
+  return raw
     .map(s => ({
       ...s,
       building:   getBuildingFromRoom(s.room),
       timeBlocks: (s.daysAndTimes || []).map(parseDaysAndTime).filter(Boolean),
     }))
     .filter(s => s.building !== null);
-  console.log(`Loaded ${schedule.length} sections from JSON (${raw.length - schedule.length} skipped)`);
-} catch (err) {
-  console.warn('Could not load schedule JSON:', err.message);
+}
+
+async function loadSchedule() {
+  if (db) {
+    try {
+      const raw = await db.collection('schedules').find({}, { projection: { _id: 0 } }).toArray();
+      if (raw.length > 0) {
+        schedule = processRaw(raw);
+        console.log(`Loaded ${schedule.length} sections from MongoDB (${raw.length - schedule.length} skipped)`);
+        return;
+      }
+    } catch (err) {
+      console.warn('Could not load schedule from MongoDB:', err.message);
+    }
+  }
+
+  try {
+    const raw = JSON.parse(
+      readFileSync(path.join(__dirname, 'data', 'hunter-all-subjects-schedule.json'), 'utf8')
+    );
+    schedule = processRaw(raw);
+    console.log(`Loaded ${schedule.length} sections from JSON (${raw.length - schedule.length} skipped)`);
+  } catch (err) {
+    console.warn('Could not load schedule JSON:', err.message);
+  }
 }
 
 const DAY_NAME_TO_ABBREV = {
@@ -121,24 +141,62 @@ const DAY_NAME_TO_ABBREV = {
 
 function computeAvailability(room, dayAbbrev, timeMinutes) {
   let nextStart = Infinity;
+  let nextTopic = null;
   for (const s of schedule) {
     if (s.room !== room) continue;
     for (const b of s.timeBlocks) {
       if (b.days.includes(dayAbbrev) && b.startMinutes > timeMinutes) {
-        if (b.startMinutes < nextStart) nextStart = b.startMinutes;
+        if (b.startMinutes < nextStart) {
+          nextStart = b.startMinutes;
+          nextTopic = s.courseTopic || s.subjectCode || null;
+        }
       }
     }
   }
   if (nextStart === Infinity) {
-    return { nextClass: 'No more classes today', availableFor: 240 };
+    return { nextClass: null, availableFor: null, nextTopic: null };
   }
   return {
     nextClass:    minutesToTimeStr(nextStart),
     availableFor: nextStart - timeMinutes,
+    nextTopic,
   };
 }
 
 // ── JSON-based API routes ─────────────────────────────────────────────────────
+
+// GET /api/rooms/schedule?room=...&day=Monday&time=14:30  →  upcoming classes for a room
+app.get('/api/rooms/schedule', (req, res) => {
+  const { room, day, time } = req.query;
+  if (!room || !day || !time) {
+    return res.status(400).json({ error: 'room, day, and time are required' });
+  }
+  const dayAbbrev = DAY_NAME_TO_ABBREV[day] ?? day;
+  const [hStr, mStr] = time.split(':');
+  const timeMinutes = parseInt(hStr) * 60 + parseInt(mStr || '0');
+
+  const upcoming = [];
+  for (const s of schedule) {
+    if (s.room !== room) continue;
+    for (const b of s.timeBlocks) {
+      if (b.days.includes(dayAbbrev) && b.endMinutes > timeMinutes) {
+        upcoming.push({
+          courseTopic: s.courseTopic || s.subjectCode,
+          subjectCode: s.subjectCode,
+          section:     s.section,
+          instructor:  s.instructor,
+          startTime:   minutesToTimeStr(b.startMinutes),
+          endTime:     minutesToTimeStr(b.endMinutes),
+          startMinutes: b.startMinutes,
+          isCurrent:   b.startMinutes <= timeMinutes,
+        });
+      }
+    }
+  }
+
+  upcoming.sort((a, b) => a.startMinutes - b.startMinutes);
+  res.json(upcoming.map(({ startMinutes, ...rest }) => rest));
+});
 
 // GET /api/rooms/buildings  →  ["Baker Building", "East Building", ...]
 app.get('/api/rooms/buildings', (req, res) => {
@@ -200,6 +258,57 @@ app.get('/api/rooms/available', (req, res) => {
   res.json(results);
 });
 
+// GET /api/debug/summary
+app.get('/api/debug/summary', (_req, res) => {
+  const rooms   = [...new Set(schedule.map(s => s.room))];
+  const codes   = [...new Set(schedule.map(s => s.subjectCode))].sort();
+  const sample  = rooms.slice(0, 10);
+  res.json({
+    totalSections: schedule.length,
+    totalRooms:    rooms.length,
+    subjectCodes:  codes,
+    sampleRooms:   sample,
+  });
+});
+
+// GET /api/debug/room/:room
+app.get('/api/debug/room/:room', (req, res) => {
+  const roomId   = req.params.room;
+  const day      = req.query.day  || 'Monday';
+  const time     = req.query.time || '12:00';
+  const dayAbbrev = DAY_NAME_TO_ABBREV[day] ?? day;
+  const [hStr, mStr] = time.split(':');
+  const timeMinutes  = parseInt(hStr) * 60 + parseInt(mStr || '0');
+
+  const sections = schedule.filter(s => s.room === roomId);
+  const blocks   = sections.flatMap(s =>
+    s.timeBlocks.map(b => ({
+      courseTopic: s.courseTopic,
+      subjectCode: s.subjectCode,
+      days: b.days,
+      startMinutes: b.startMinutes,
+      endMinutes:   b.endMinutes,
+      startTime:    minutesToTimeStr(b.startMinutes),
+      endTime:      minutesToTimeStr(b.endMinutes),
+    }))
+  );
+
+  const isOccupied = blocks.some(b =>
+    b.days.includes(dayAbbrev) && timeMinutes >= b.startMinutes && timeMinutes < b.endMinutes
+  );
+  const avail = computeAvailability(roomId, dayAbbrev, timeMinutes);
+
+  res.json({
+    room: roomId,
+    queriedDay: day,
+    queriedTime: time,
+    totalSections: sections.length,
+    allBlocks: blocks,
+    isOccupiedAt: isOccupied,
+    availability: avail,
+  });
+});
+
 // GET /api/rooms/all  →  all unique rooms (used for favorites display)
 app.get('/api/rooms/all', (req, res) => {
   const roomMap = new Map();
@@ -233,45 +342,6 @@ async function connectDB() {
     console.log('Connected to MongoDB');
   } catch (error) {
     console.warn('MongoDB unavailable — running without database:', error.message);
-  }
-}
-
-async function seedDatabase() {
-  if (!db) return;
-  try {
-    console.log('Seeding database...');
-    await db.collection('rooms').deleteMany({});
-    await db.collection('classes').deleteMany({});
-
-    const rooms = [
-      { floor: 3, building: 'East Building',       capacity: 50,  room_type: 'Lecture Hall', room_number: '301' },
-      { floor: 2, building: 'East Building',       capacity: 30,  room_type: 'Classroom',    room_number: '201' },
-      { floor: 4, building: 'Thomas Hunter Hall',  capacity: 25,  room_type: 'Classroom',    room_number: '401' },
-      { floor: 3, building: 'Thomas Hunter Hall',  capacity: 40,  room_type: 'Lecture Hall', room_number: '302' },
-      { floor: 1, building: 'West Building',       capacity: 150, room_type: 'Lecture Hall', room_number: '105' },
-      { floor: 5, building: 'West Building',       capacity: 20,  room_type: 'Classroom',    room_number: '501' },
-      { floor: 2, building: 'East Building',       capacity: 35,  room_type: 'Classroom',    room_number: '210' },
-      { floor: 4, building: 'North Building',      capacity: 45,  room_type: 'Computer Lab', room_number: '408' },
-    ];
-    await db.collection('rooms').insertMany(rooms);
-
-    const insertedRooms = await db.collection('rooms').find({}).toArray();
-    const roomIds = insertedRooms.map(r => r._id);
-    const classes = [
-      { roomId: roomIds[0], className: 'CSCI 101',  days: ['Monday','Wednesday','Friday'], startTime: '09:00', endTime: '10:00' },
-      { roomId: roomIds[0], className: 'CSCI 201',  days: ['Tuesday','Thursday'],           startTime: '10:30', endTime: '12:00' },
-      { roomId: roomIds[1], className: 'MATH 201',  days: ['Monday','Wednesday'],           startTime: '13:00', endTime: '14:30' },
-      { roomId: roomIds[2], className: 'ENG 101',   days: ['Tuesday','Thursday'],           startTime: '09:00', endTime: '10:30' },
-      { roomId: roomIds[3], className: 'PHYS 201',  days: ['Wednesday','Friday'],           startTime: '14:00', endTime: '16:00' },
-      { roomId: roomIds[4], className: 'HIST 101',  days: ['Monday','Wednesday','Friday'],  startTime: '11:00', endTime: '12:00' },
-      { roomId: roomIds[5], className: 'PSYCH 101', days: ['Tuesday','Thursday'],           startTime: '13:00', endTime: '14:30' },
-      { roomId: roomIds[6], className: 'CHEM 101',  days: ['Monday','Wednesday'],           startTime: '10:00', endTime: '11:30' },
-      { roomId: roomIds[7], className: 'BIO 201',   days: ['Tuesday','Thursday'],           startTime: '14:00', endTime: '16:00' },
-    ];
-    await db.collection('classes').insertMany(classes);
-    console.log('Database seeded');
-  } catch (error) {
-    console.error('Error seeding database:', error);
   }
 }
 
@@ -389,7 +459,7 @@ app.get('/api/filter-rooms', async (req, res) => {
 
 async function start() {
   await connectDB();
-  await seedDatabase();
+  await loadSchedule();
   app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
   });

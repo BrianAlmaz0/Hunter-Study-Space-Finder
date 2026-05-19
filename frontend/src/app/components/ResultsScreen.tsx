@@ -6,8 +6,8 @@ interface Room {
   building: string;
   roomNumber: string;
   floor: number;
-  availableFor: number;
-  nextClass: string;
+  availableFor: number | null;
+  nextClass: string | null;
   type: string;
 }
 
@@ -75,10 +75,9 @@ const mockRooms: Room[] = [
   },
 ];
 
-function formatAvailability(minutes: number): string {
-  if (minutes < 60) {
-    return `${minutes} min`;
-  }
+function formatAvailability(minutes: number | null): string {
+  if (minutes === null) return 'All day';
+  if (minutes < 60) return `${minutes} min`;
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
   return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
@@ -128,7 +127,7 @@ export function ResultsScreen({ onRoomSelect, favorites, isDesktop, rooms = mock
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-muted-foreground" />
                     <span className="text-sm text-muted-foreground">
-                      Next class at {room.nextClass}
+                      {room.nextClass ? `Next class at ${room.nextClass}` : 'No more classes today'}
                     </span>
                   </div>
                 </div>
@@ -146,13 +145,19 @@ export function ResultsScreen({ onRoomSelect, favorites, isDesktop, rooms = mock
                     }}
                     className="bg-[#10b981] text-white px-4 py-2.5 rounded-xl text-center min-w-[80px]"
                   >
-                    <div className="text-2xl leading-none mb-0.5">
-                      {formatAvailability(room.availableFor).split(' ')[0]}
-                    </div>
-                    {formatAvailability(room.availableFor).split(' ')[1] && (
-                      <div className="text-xs opacity-90">
-                        {formatAvailability(room.availableFor).split(' ')[1]}
-                      </div>
+                    {room.availableFor === null ? (
+                      <div className="text-lg leading-none py-1">All day</div>
+                    ) : (
+                      <>
+                        <div className="text-2xl leading-none mb-0.5">
+                          {formatAvailability(room.availableFor).split(' ')[0]}
+                        </div>
+                        {formatAvailability(room.availableFor).split(' ')[1] && (
+                          <div className="text-xs opacity-90">
+                            {formatAvailability(room.availableFor).split(' ')[1]}
+                          </div>
+                        )}
+                      </>
                     )}
                   </motion.div>
 

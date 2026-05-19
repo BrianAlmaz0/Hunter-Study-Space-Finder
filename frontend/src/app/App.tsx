@@ -19,8 +19,8 @@ interface Room {
   building: string;
   roomNumber: string;
   floor: number;
-  availableFor: number;
-  nextClass: string;
+  availableFor: number | null;
+  nextClass: string | null;
   type: string;
   capacity?: number;
 }
@@ -37,6 +37,13 @@ export default function App() {
   const [buildings, setBuildings] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [lastSearchFilters, setLastSearchFilters] = useState<SearchFilters>(() => {
+    const now = new Date();
+    return {
+      day:  now.toLocaleString('en-US', { weekday: 'long' }),
+      time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+    };
+  });
 
   useEffect(() => {
     const checkWidth = () => setIsDesktop(window.innerWidth >= 1024);
@@ -86,6 +93,7 @@ export default function App() {
 
       const results: Room[] = await response.json();
       setSearchResults(results);
+      setLastSearchFilters(filters);
       setCurrentScreen('results');
     } catch (err) {
       setSearchError(err instanceof Error ? err.message : 'Could not reach server');
@@ -204,6 +212,8 @@ export default function App() {
                   isFavorite={isFavorite(selectedRoom.id)}
                   onToggleFavorite={() => toggleFavorite(selectedRoom.id)}
                   isDesktop={true}
+                  searchDay={lastSearchFilters.day}
+                  searchTime={lastSearchFilters.time}
                 />
               </motion.div>
             )}
@@ -255,6 +265,8 @@ export default function App() {
                 isFavorite={isFavorite(selectedRoom.id)}
                 onToggleFavorite={() => toggleFavorite(selectedRoom.id)}
                 isDesktop={false}
+                searchDay={lastSearchFilters.day}
+                searchTime={lastSearchFilters.time}
               />
             </motion.div>
           )}
