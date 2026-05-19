@@ -12,6 +12,7 @@ interface HomeScreenProps {
 interface SearchFilters {
   building?: string;
   roomType?: string;
+  floor?: string;
   day: string;
   time: string;
 }
@@ -28,6 +29,7 @@ const DEFAULT_BUILDINGS = [
 
 export function HomeScreen({ onSearch, isDesktop, buildings, isSearching = false, searchError = null }: HomeScreenProps) {
   const [building, setBuilding] = useState('');
+  const [floor, setFloor] = useState('');
   const [timeFilter, setTimeFilter] = useState('now');
   const [roomType, setRoomType] = useState('all');
   const [selectedDay, setSelectedDay] = useState(new Date().toLocaleString('en-US', { weekday: 'long' }));
@@ -47,6 +49,7 @@ export function HomeScreen({ onSearch, isDesktop, buildings, isSearching = false
         : selectedTime,
     };
     if (building) filters.building = building;
+    if (floor) filters.floor = floor;
     onSearch(filters);
   };
 
@@ -82,6 +85,37 @@ export function HomeScreen({ onSearch, isDesktop, buildings, isSearching = false
                   {b}
                 </option>
               ))}
+            </select>
+          </div>
+
+          {/* Floor Selection */}
+          <div>
+            <label className="flex items-center gap-2 mb-3 text-sm text-foreground">
+              <Grid3x3 className="w-4 h-4 text-muted-foreground" />
+              Floor
+            </label>
+            <select
+              value={floor}
+              onChange={(e) => setFloor(e.target.value)}
+              className="w-full px-4 py-3.5 bg-white border border-border rounded-xl appearance-none cursor-pointer hover:border-[#2563eb]/50 transition-colors"
+            >
+              <option value="">Any Floor</option>
+              <option value="C">Floor C</option>
+              <option value="1">Floor 1</option>
+              <option value="2">Floor 2</option>
+              <option value="3">Floor 3</option>
+              <option value="4">Floor 4</option>
+              <option value="5">Floor 5</option>
+              <option value="6">Floor 6</option>
+              <option value="7">Floor 7</option>
+              <option value="8">Floor 8</option>
+              <option value="9">Floor 9</option>
+              <option value="10">Floor 10</option>
+              <option value="11">Floor 11</option>
+              <option value="12">Floor 12</option>
+              <option value="13">Floor 13</option>
+              <option value="14">Floor 14</option>
+              <option value="15">Floor 15</option>
             </select>
           </div>
 

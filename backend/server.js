@@ -81,10 +81,16 @@ function getRoomNumber(room) {
 }
 
 function getFloor(roomNumber) {
-  const m = roomNumber.match(/\d+/);
+  const trimmed = roomNumber.trim();
+  // check if it starts with C (like C001 = C floor)
+  if (/^C/i.test(trimmed)) return 'C';
+  
+  // otherwise extract floor from digits
+  const m = trimmed.match(/\d+/);
   if (!m) return 1;
-  const firstDigit = parseInt(m[0][0]);
-  return firstDigit || 1;
+  const digits = m[0];
+  if (digits.length <= 2) return parseInt(digits[0]) || 1;
+  return parseInt(digits.slice(0, -2)) || 1;
 }
 
 function minutesToTimeStr(minutes) {
@@ -176,12 +182,22 @@ app.get('/api/rooms/schedule', (req, res) => {
   const timeMinutes = parseInt(hStr) * 60 + parseInt(mStr || '0');
 
   const upcoming = [];
+  const seenTimes = new Set(); // tracks start times
+  const seenCourses = new Set(); // tracks course names
+  
   for (const s of schedule) {
     if (s.room !== room) continue;
     for (const b of s.timeBlocks) {
       if (b.days.includes(dayAbbrev) && b.endMinutes > timeMinutes) {
+        const courseName = s.courseTopic || s.subjectCode;
+        // skip if we've already seen this start time OR this course
+        if (seenTimes.has(b.startMinutes) || seenCourses.has(courseName)) continue;
+        
+        seenTimes.add(b.startMinutes);
+        seenCourses.add(courseName);
+        
         upcoming.push({
-          courseTopic: s.courseTopic || s.subjectCode,
+          courseTopic: courseName,
           subjectCode: s.subjectCode,
           section:     s.section,
           instructor:  s.instructor,
@@ -204,9 +220,9 @@ app.get('/api/rooms/buildings', (req, res) => {
   res.json(buildings);
 });
 
-// GET /api/rooms/available?building=West%20Building&day=Tuesday&time=14:30
+// GET /api/rooms/available?building=West%20Building&day=Tuesday&time=14:30&floor=3
 app.get('/api/rooms/available', (req, res) => {
-  const { building, day, time } = req.query;
+  const { building, day, time, floor } = req.query;
   if (!day || !time) {
     return res.status(400).json({ error: 'day and time query params are required' });
   }
@@ -214,6 +230,7 @@ app.get('/api/rooms/available', (req, res) => {
   const dayAbbrev = DAY_NAME_TO_ABBREV[day] ?? day;
   const [hStr, mStr] = time.split(':');
   const timeMinutes = parseInt(hStr) * 60 + parseInt(mStr || '0');
+  const floorFilter = floor ? floor.toString().toUpperCase() : null; // Floor can be "C", "B", or "1", "2", etc.
 
   // Find rooms occupied at this moment
   const occupied = new Set();
@@ -242,12 +259,14 @@ app.get('/api/rooms/available', (req, res) => {
   for (const [room, bldg] of roomMap) {
     if (occupied.has(room)) continue;
     const roomNumber = getRoomNumber(room);
+    const roomFloor = getFloor(roomNumber);
+    if (floorFilter !== null && roomFloor.toString().toUpperCase() !== floorFilter) continue; // Filter by floor if specified
     const { nextClass, availableFor } = computeAvailability(room, dayAbbrev, timeMinutes);
     results.push({
       id:           room,
       building:     bldg,
       roomNumber,
-      floor:        getFloor(roomNumber),
+      floor:        roomFloor,
       availableFor,
       nextClass,
       type:         'Classroom',
@@ -311,17 +330,33 @@ app.get('/api/debug/room/:room', (req, res) => {
 
 // GET /api/rooms/all  →  all unique rooms (used for favorites display)
 app.get('/api/rooms/all', (req, res) => {
+  const { day, time } = req.query;
+  let dayAbbrev, timeMinutes;
+  // specified day/time
+  if (day && time) {
+    dayAbbrev = DAY_NAME_TO_ABBREV[day] ?? day;
+    const [hStr, mStr] = time.split(':');
+    timeMinutes = parseInt(hStr) * 60 + parseInt(mStr || '0');
+  } else {
+    // default to current day/time
+    const now = new Date();
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    dayAbbrev = DAY_NAME_TO_ABBREV[dayNames[now.getDay()]] ?? 'Mo';
+    timeMinutes = now.getHours() * 60 + now.getMinutes();
+  }
+
   const roomMap = new Map();
   for (const s of schedule) {
     if (!roomMap.has(s.room)) {
       const roomNumber = getRoomNumber(s.room);
+      const { nextClass, availableFor } = computeAvailability(s.room, dayAbbrev, timeMinutes);
       roomMap.set(s.room, {
         id:          s.room,
         building:    s.building,
         roomNumber,
         floor:       getFloor(roomNumber),
-        availableFor: 0,
-        nextClass:   '—',
+        availableFor,
+        nextClass,
         type:        'Classroom',
       });
     }
