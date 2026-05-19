@@ -109,6 +109,7 @@ const getFavorites = (): string[] => {
 
 export function FavoritesScreen({ favorites, onRoomSelect, isDesktop, rooms = mockRooms }: FavoritesScreenProps) {
   const favoriteRooms = rooms.filter((room) => favorites.includes(room.id));
+  console.log('Favorite Rooms:', favoriteRooms);
 
   return (
     <div className={`min-h-full ${isDesktop ? 'px-12 py-10' : 'px-6 py-6'}`}>

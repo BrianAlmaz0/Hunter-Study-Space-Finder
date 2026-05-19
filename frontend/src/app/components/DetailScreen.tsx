@@ -54,6 +54,8 @@ export function DetailScreen({ room, isFavorite, onToggleFavorite, isDesktop, se
       .catch(() => setLoadingSchedule(false));
   }, [room.id, searchDay, searchTime]);
 
+  console.log('Upcoming classes for room', room.id, upcomingClasses);
+
   return (
     <div className={`min-h-full ${isDesktop ? 'px-12 py-10' : 'px-6 py-6'}`}>
       <div className={isDesktop ? 'max-w-4xl mx-auto' : 'max-w-md mx-auto'}>

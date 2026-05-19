@@ -12,13 +12,14 @@ interface SearchFilters {
   building?: string;
   day: string;
   time: string;
+  floor?: string;
 }
 
 interface Room {
   id: string;
   building: string;
   roomNumber: string;
-  floor: number;
+  floor: string | number;
   availableFor: number | null;
   nextClass: string | null;
   type: string;
@@ -87,6 +88,7 @@ export default function App() {
     try {
       const params = new URLSearchParams({ day: filters.day, time: filters.time });
       if (filters.building) params.append('building', filters.building);
+      if (filters.floor) params.append('floor', filters.floor);
 
       const response = await fetch(`${API}/api/rooms/available?${params}`);
       if (!response.ok) throw new Error(`Server error ${response.status}`);
