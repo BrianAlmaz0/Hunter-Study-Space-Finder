@@ -17,22 +17,32 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     // Connect to database collection context
-    let student = await db.collection('students').findOne({ email: normalizedEmail });
+    const result = await db.collection('students').findOneAndUpdate(
+      { email: normalizedEmail },
+      {
+        $setOnInsert: {
+          email: normalizedEmail,
+          password: password,
+          createdAt: new Date()
+        }
+      },
+      {
+        upsert: true,
+        returnDocument: 'after'
+      }
+    );
 
-    if (!student) {
-      // Prototype flow: Automatically registers students on their initial login attempt
-      const newStudent = {
-        email: normalizedEmail,
-        password: password, // Note: In production environments, use bcrypt for secure password hashing
-        createdAt: new Date()
-      };
-      
-      await db.collection('students').insertOne(newStudent);
-      return res.status(200).json({ 
-        message: 'Student account registered successfully!', 
-        email: normalizedEmail 
+    const student = result.value || result;
+
+    const isNewRegistration = student.createdAt && (new Date() - student.createdAt < 1000);
+
+    if (isNewRegistration) {
+      return res.status(200).json({
+        message: 'Student account registered successfully!',
+        email: normalizedEmail
       });
     }
+    
 
     // Validate password match
     if (student.password !== password) {
