@@ -4,6 +4,9 @@ import { readFileSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import nodemailer from 'nodemailer';
 
 dotenv.config();
 
@@ -13,6 +16,7 @@ const __dirname  = path.dirname(__filename);
 const app  = express();
 const PORT = process.env.PORT || 3001;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/hunter-study-spaces';
+const JWT_SECRET = process.env.JWT_SECRET || 'hunter-study-spaces-dev-secret';
 
 let db;
 
@@ -21,8 +25,250 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
+});
+
+// ── Auth helpers ──────────────────────────────────────────────────────────────
+
+const ALLOWED_DOMAINS = ['login.cuny.edu', 'hunter.cuny.edu', 'myhunter.cuny.edu'];
+const isValidCunyEmail = (email) =>
+  ALLOWED_DOMAINS.some(d => email.toLowerCase().trim().endsWith(`@${d}`));
+const generateCode = () => String(Math.floor(100000 + Math.random() * 900000));
+
+// ── Email transporter ─────────────────────────────────────────────────────────
+// To enable real emails: add EMAIL_USER and EMAIL_PASS to backend/.env
+// For Gmail use an App Password: https://myaccount.google.com/apppasswords
+// EMAIL_FROM is optional (e.g. "Hunter Study Spaces <you@gmail.com>")
+const emailTransporter = process.env.EMAIL_USER
+  ? nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+    })
+  : null;
+
+async function sendVerificationEmail(email, code) {
+  if (!emailTransporter) {
+    console.log(`[DEV] Verification code for ${email}: ${code}`);
+    return;
+  }
+  await emailTransporter.sendMail({
+    from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+    to: email,
+    subject: 'Hunter Study Spaces – Verify Your Email',
+    text: `Your verification code is: ${code}\n\nThis code expires in 15 minutes.`,
+    html: `<p>Your verification code is: <strong style="font-size:22px;letter-spacing:4px">${code}</strong></p><p>This code expires in 15 minutes.</p>`,
+  });
+}
+
+// ── Auth middleware ───────────────────────────────────────────────────────────
+
+function requireAuth(req, res, next) {
+  const auth = req.headers.authorization;
+  if (!auth || !auth.startsWith('Bearer ')) return res.status(401).json({ error: 'Unauthorized.' });
+  try {
+    req.user = jwt.verify(auth.slice(7), JWT_SECRET);
+    next();
+  } catch {
+    return res.status(401).json({ error: 'Invalid or expired token.' });
+  }
+}
+
+// ── Auth endpoints ────────────────────────────────────────────────────────────
+
+app.post('/api/auth/signup', async (req, res) => {
+  if (!db) return res.status(503).json({ error: 'Database unavailable.' });
+
+  const { name, email, password } = req.body;
+  if (!name || !email || !password)
+    return res.status(400).json({ error: 'Name, email, and password are required.' });
+
+  const normalizedEmail = email.toLowerCase().trim();
+  if (!isValidCunyEmail(normalizedEmail))
+    return res.status(400).json({ error: 'Email must be a Hunter/CUNY address (@login.cuny.edu, @hunter.cuny.edu, or @myhunter.cuny.edu).' });
+  if (password.length < 8)
+    return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+
+  try {
+    const existing = await db.collection('students').findOne({ email: normalizedEmail });
+    if (existing?.isVerified)
+      return res.status(409).json({ error: 'An account with this email already exists. Please log in.' });
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    const code = generateCode();
+    const verificationCodeExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+    if (existing) {
+      await db.collection('students').updateOne(
+        { email: normalizedEmail },
+        { $set: { name: name.trim(), passwordHash, verificationCode: code, verificationCodeExpiresAt } }
+      );
+    } else {
+      await db.collection('students').insertOne({
+        name: name.trim(), email: normalizedEmail, passwordHash,
+        isVerified: false, verificationCode: code, verificationCodeExpiresAt,
+        favorites: [], createdAt: new Date(),
+      });
+    }
+
+    await sendVerificationEmail(normalizedEmail, code);
+    return res.status(200).json({ message: 'Verification code sent.', email: normalizedEmail });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/auth/verify-email', async (req, res) => {
+  if (!db) return res.status(503).json({ error: 'Database unavailable.' });
+
+  const { email, code } = req.body;
+  if (!email || !code) return res.status(400).json({ error: 'Email and code are required.' });
+
+  const normalizedEmail = email.toLowerCase().trim();
+  try {
+    const student = await db.collection('students').findOne({ email: normalizedEmail });
+    if (!student) return res.status(404).json({ error: 'No account found for this email.' });
+    if (student.isVerified) return res.status(400).json({ error: 'Account already verified. Please log in.' });
+    if (!student.verificationCode || !student.verificationCodeExpiresAt)
+      return res.status(400).json({ error: 'No pending verification. Please request a new code.' });
+    if (new Date() > student.verificationCodeExpiresAt)
+      return res.status(400).json({ error: 'Code expired. Please request a new one.' });
+    if (student.verificationCode !== code.trim())
+      return res.status(400).json({ error: 'Incorrect code. Please try again.' });
+
+    await db.collection('students').updateOne(
+      { email: normalizedEmail },
+      { $set: { isVerified: true }, $unset: { verificationCode: '', verificationCodeExpiresAt: '' } }
+    );
+
+    const token = jwt.sign({ email: normalizedEmail, userId: student._id.toString() }, JWT_SECRET, { expiresIn: '7d' });
+    return res.status(200).json({ student: { name: student.name, email: normalizedEmail }, token });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/auth/resend-code', async (req, res) => {
+  if (!db) return res.status(503).json({ error: 'Database unavailable.' });
+
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email is required.' });
+
+  const normalizedEmail = email.toLowerCase().trim();
+  try {
+    const student = await db.collection('students').findOne({ email: normalizedEmail });
+    if (!student) return res.status(404).json({ error: 'No account found for this email.' });
+    if (student.isVerified) return res.status(400).json({ error: 'Account already verified.' });
+
+    const code = generateCode();
+    const verificationCodeExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+    await db.collection('students').updateOne(
+      { email: normalizedEmail },
+      { $set: { verificationCode: code, verificationCodeExpiresAt } }
+    );
+
+    await sendVerificationEmail(normalizedEmail, code);
+    return res.status(200).json({ message: 'New verification code sent.' });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  if (!db) return res.status(503).json({ error: 'Database unavailable.' });
+
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'Email and password are required.' });
+
+  const normalizedEmail = email.toLowerCase().trim();
+  if (!isValidCunyEmail(normalizedEmail))
+    return res.status(400).json({ error: 'Email must be a Hunter/CUNY address.' });
+
+  try {
+    const student = await db.collection('students').findOne({ email: normalizedEmail });
+    if (!student) return res.status(404).json({ error: 'No account found. Please sign up first.' });
+
+    const passwordMatch = await bcrypt.compare(password, student.passwordHash);
+    if (!passwordMatch) return res.status(401).json({ error: 'Incorrect password.' });
+
+    if (!student.isVerified) {
+      const code = generateCode();
+      const verificationCodeExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+      await db.collection('students').updateOne(
+        { email: normalizedEmail },
+        { $set: { verificationCode: code, verificationCodeExpiresAt } }
+      );
+      await sendVerificationEmail(normalizedEmail, code);
+      return res.status(403).json({ error: 'Email not verified.', needsVerification: true, email: normalizedEmail });
+    }
+
+    const token = jwt.sign({ email: normalizedEmail, userId: student._id.toString() }, JWT_SECRET, { expiresIn: '7d' });
+    return res.status(200).json({ student: { name: student.name, email: normalizedEmail }, token });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/auth/verify', async (req, res) => {
+  const auth = req.headers.authorization;
+  if (!auth || !auth.startsWith('Bearer '))
+    return res.status(401).json({ error: 'No token provided.' });
+
+  try {
+    const payload = jwt.verify(auth.slice(7), JWT_SECRET);
+    if (!payload.email) return res.status(401).json({ error: 'Invalid token.' });
+
+    let name = 'Hunter Student';
+    if (db) {
+      const student = await db.collection('students').findOne({ email: payload.email });
+      if (student) name = student.name;
+    }
+    return res.status(200).json({ student: { name, email: payload.email } });
+  } catch {
+    return res.status(401).json({ error: 'Invalid or expired token.' });
+  }
+});
+
+// ── Favorites endpoints ───────────────────────────────────────────────────────
+
+app.get('/api/favorites', requireAuth, async (req, res) => {
+  if (!db) return res.status(503).json({ error: 'Database unavailable.' });
+  try {
+    const student = await db.collection('students').findOne({ email: req.user.email });
+    return res.json(student?.favorites || []);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/favorites', requireAuth, async (req, res) => {
+  if (!db) return res.status(503).json({ error: 'Database unavailable.' });
+  const { roomId } = req.body;
+  if (!roomId) return res.status(400).json({ error: 'roomId is required.' });
+  try {
+    await db.collection('students').updateOne(
+      { email: req.user.email },
+      { $addToSet: { favorites: roomId } }
+    );
+    return res.json({ success: true });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/favorites/:roomId', requireAuth, async (req, res) => {
+  if (!db) return res.status(503).json({ error: 'Database unavailable.' });
+  try {
+    await db.collection('students').updateOne(
+      { email: req.user.email },
+      { $pull: { favorites: req.params.roomId } }
+    );
+    return res.json({ success: true });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
 });
 
 // ── JSON schedule helpers ─────────────────────────────────────────────────────
