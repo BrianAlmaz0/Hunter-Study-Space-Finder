@@ -64,6 +64,9 @@ export function HomeScreen({ onSearch, isDesktop, buildings, isSearching = false
           <p className={`text-muted-foreground ${isDesktop ? 'text-lg' : ''}`}>
             Find available classrooms to study between classes
           </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Accurate for Spring 2026 semester (January 26 – May 26)
+          </p>
         </div>
 
         {/* Search Filters */}
