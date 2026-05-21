@@ -5,6 +5,7 @@ import { DetailScreen } from './components/DetailScreen';
 import { FavoritesScreen } from './components/FavoritesScreen';
 import { Home, Search, Heart, ChevronLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { API } from './api';
 
 type Screen = 'home' | 'results' | 'detail' | 'favorites';
 
@@ -26,7 +27,6 @@ interface Room {
   capacity?: number;
 }
 
-const API = 'http://localhost:3001';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');

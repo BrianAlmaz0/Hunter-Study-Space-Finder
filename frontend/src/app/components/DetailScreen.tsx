@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MapPin, Layers, Grid3x3, Clock, Users, Heart } from 'lucide-react';
 import { motion } from 'motion/react';
-
-const API = 'http://localhost:3001';
+import { API } from '../api';
 
 interface Room {
   id: string;

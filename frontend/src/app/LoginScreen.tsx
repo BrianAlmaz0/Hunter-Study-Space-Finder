@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { GraduationCap, AlertCircle, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { API } from './api';
 
 type AuthStep = 'login' | 'signup' | 'verify';
-
-const API = 'http://localhost:3001';
 const ALLOWED_DOMAINS = ['login.cuny.edu', 'hunter.cuny.edu', 'myhunter.cuny.edu'];
 const isValidCunyEmail = (email: string) =>
   ALLOWED_DOMAINS.some(d => email.toLowerCase().trim().endsWith(`@${d}`));

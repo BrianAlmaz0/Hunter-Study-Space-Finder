@@ -6,6 +6,7 @@ import { FavoritesScreen } from './components/FavoritesScreen';
 import { LoginScreen } from './LoginScreen';
 import { Home, Search, Heart, ChevronLeft, LogOut, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { API } from './api';
 
 type Screen = 'home' | 'results' | 'detail' | 'favorites';
 
@@ -43,7 +44,6 @@ interface StudentUser {
   email: string;
 }
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 function computeTimeRemaining(expiresAt: string): string {
   const diff = new Date(expiresAt).getTime() - Date.now();

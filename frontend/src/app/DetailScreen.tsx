@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Users, BookOpen, UserCheck, ShieldAlert, CheckCircle2 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { API } from './api';
 
 interface Room {
   id: string;
@@ -36,7 +37,7 @@ export function DetailScreen({ room, isDesktop }: DetailScreenProps) {
   useEffect(() => {
     const fetchLiveOccupancy = async () => {
       try {
-        const res = await fetch(`http://localhost:3001/api/rooms/${room.id}/occupancy`);
+        const res = await fetch(`${API}/api/rooms/${room.id}/occupancy`);
         if (res.ok) {
           const data = await res.json();
           setOccupancy({
@@ -63,7 +64,7 @@ export function DetailScreen({ room, isDesktop }: DetailScreenProps) {
       const sessionRaw = localStorage.getItem('student_session');
       const student = sessionRaw ? JSON.parse(sessionRaw) : { name: 'Anonymous', emplid: '00000000' };
 
-      const res = await fetch(`http://localhost:3001/api/rooms/${room.id}/checkin`, {
+      const res = await fetch(`${API}/api/rooms/${room.id}/checkin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
