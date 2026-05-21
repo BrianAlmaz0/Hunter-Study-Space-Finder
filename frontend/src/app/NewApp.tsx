@@ -60,7 +60,6 @@ export default function App() {
     return () => window.removeEventListener('resize', checkDesktop);
   }, []);
 
-  // Verify JWT on startup — validates token with server, falls back to cached session if server is offline
   useEffect(() => {
     const verifySession = async () => {
       const token = localStorage.getItem('auth_token');
@@ -79,10 +78,9 @@ export default function App() {
           localStorage.removeItem('student_session');
         }
       } catch {
-        // Server offline — trust the cached session so the app still works
         const cached = localStorage.getItem('student_session');
         if (cached) {
-          try { setUser(JSON.parse(cached)); } catch { /* ignore corrupt data */ }
+          try { setUser(JSON.parse(cached)); } catch { }
         }
       } finally {
         setIsVerifying(false);
@@ -91,7 +89,6 @@ export default function App() {
     verifySession();
   }, []);
 
-  // Fetch buildings, all rooms, and user-specific favorites after login
   useEffect(() => {
     if (!user) { setFavorites([]); return; }
     const token = localStorage.getItem('auth_token');
@@ -156,7 +153,6 @@ export default function App() {
     const token = localStorage.getItem('auth_token');
     const removing = favorites.includes(roomId);
 
-    // Optimistic update
     setFavorites(prev => removing ? prev.filter(id => id !== roomId) : [...prev, roomId]);
 
     if (!token) return;
@@ -211,29 +207,28 @@ export default function App() {
     </AnimatePresence>
   );
 
-  // Desktop layout — sidebar + main content
   if (isDesktop) {
     return (
-      <div className="size-full bg-[#fafbfc] flex">
-        <div className="w-64 bg-white border-r border-border flex flex-col">
-          <div className="p-6 border-b border-border">
-            <h1 className="text-xl text-foreground">Hunter Study Space</h1>
+      <div className="size-full bg-background flex">
+        <div className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
+          <div className="p-6 border-b border-sidebar-border">
+            <h1 className="text-xl text-sidebar-foreground">Hunter Study Space</h1>
             <p className="text-sm text-muted-foreground mt-1">Find study rooms</p>
           </div>
 
           <nav className="flex-1 p-4">
-            <button onClick={() => setCurrentScreen('home')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors mb-2 ${currentScreen === 'home' ? 'bg-[#2563eb] text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'}`}>
+            <button onClick={() => setCurrentScreen('home')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors mb-2 ${currentScreen === 'home' ? 'bg-sidebar-primary text-sidebar-primary-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'}`}>
               <Home className="w-5 h-5" /><span>Search</span>
             </button>
-            <button onClick={() => setCurrentScreen('results')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors mb-2 ${currentScreen === 'results' ? 'bg-[#2563eb] text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'}`}>
+            <button onClick={() => setCurrentScreen('results')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors mb-2 ${currentScreen === 'results' ? 'bg-sidebar-primary text-sidebar-primary-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'}`}>
               <Search className="w-5 h-5" /><span>Results</span>
             </button>
-            <button onClick={() => setCurrentScreen('favorites')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${currentScreen === 'favorites' ? 'bg-[#2563eb] text-white' : 'text-muted-foreground hover:bg-accent hover:text-foreground'}`}>
+            <button onClick={() => setCurrentScreen('favorites')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${currentScreen === 'favorites' ? 'bg-sidebar-primary text-sidebar-primary-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'}`}>
               <Heart className="w-5 h-5" /><span>Favorites</span>
             </button>
           </nav>
 
-          <div className="p-4 border-t border-border">
+          <div className="p-4 border-t border-sidebar-border">
             <div className="text-xs text-muted-foreground mb-3">
               <div className="mb-1">{searchResults.length} rooms available</div>
               <div>Welcome, {user.name}</div>
@@ -246,11 +241,11 @@ export default function App() {
 
         <div className="flex-1 overflow-auto">
           {currentScreen === 'detail' && (
-            <div className="bg-white border-b border-border px-8 py-4 flex items-center gap-3">
+            <div className="bg-card border-b border-border px-8 py-4 flex items-center gap-3">
               <button onClick={() => setCurrentScreen('results')} className="p-2 -ml-2 hover:bg-accent rounded-lg transition-colors">
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              <h2 className="text-xl">Room Details</h2>
+              <h2 className="text-xl text-card-foreground">Room Details</h2>
             </div>
           )}
           {screens}
@@ -259,30 +254,29 @@ export default function App() {
     );
   }
 
-  // Mobile layout — bottom tab bar
   return (
-    <div className="size-full bg-[#fafbfc] flex flex-col">
+    <div className="size-full bg-background flex flex-col">
       {currentScreen === 'detail' && (
-        <div className="bg-white border-b border-border px-4 py-3 flex items-center gap-3">
+        <div className="bg-card border-b border-border px-4 py-3 flex items-center gap-3">
           <button onClick={() => setCurrentScreen('results')} className="p-2 -ml-2 hover:bg-accent rounded-lg transition-colors">
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <h3 className="text-lg">Room Details</h3>
+          <h3 className="text-lg text-card-foreground">Room Details</h3>
         </div>
       )}
 
       <div className="flex-1 overflow-auto">{screens}</div>
 
       {currentScreen !== 'detail' && (
-        <div className="bg-white border-t border-border px-6 py-3 safe-area-inset-bottom">
+        <div className="bg-card border-t border-border px-6 py-3 safe-area-inset-bottom">
           <div className="flex items-center justify-around max-w-md mx-auto">
-            <button onClick={() => setCurrentScreen('home')} className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${currentScreen === 'home' ? 'text-[#2563eb]' : 'text-muted-foreground hover:text-foreground'}`}>
+            <button onClick={() => setCurrentScreen('home')} className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${currentScreen === 'home' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
               <Home className="w-6 h-6" /><span className="text-xs">Home</span>
             </button>
-            <button onClick={() => setCurrentScreen('results')} className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${currentScreen === 'results' ? 'text-[#2563eb]' : 'text-muted-foreground hover:text-foreground'}`}>
+            <button onClick={() => setCurrentScreen('results')} className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${currentScreen === 'results' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
               <Search className="w-6 h-6" /><span className="text-xs">Search</span>
             </button>
-            <button onClick={() => setCurrentScreen('favorites')} className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${currentScreen === 'favorites' ? 'text-[#2563eb]' : 'text-muted-foreground hover:text-foreground'}`}>
+            <button onClick={() => setCurrentScreen('favorites')} className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors ${currentScreen === 'favorites' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
               <Heart className="w-6 h-6" /><span className="text-xs">Favorites</span>
             </button>
           </div>
