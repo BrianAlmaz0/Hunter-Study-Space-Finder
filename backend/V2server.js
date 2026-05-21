@@ -59,7 +59,7 @@ app.get('/api/rooms/:roomId/occupancy', async function (req, res) {
     };
 
     // Pull active students in this specific room
-    var activeCheckIns = await CheckInCollection.find(dbQuery).toArray();
+    var activeCheckIns = await checkInCollection.find(dbQuery).toArray();
 
     // Aggregate subjects to see what people are studying
     var subjectBreakdown = {};
