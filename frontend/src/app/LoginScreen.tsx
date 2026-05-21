@@ -171,11 +171,12 @@ export function LoginScreen({ onLoginSuccess, isDesktop }: LoginScreenProps) {
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`bg-white w-full max-w-md rounded-2xl border border-border shadow-xl ${isDesktop ? 'p-8' : 'p-6'}`}
+        className={`bg-card w-full max-w-md rounded-2xl border border-border shadow-xl ${isDesktop ? 'p-8' : 'p-6'}`}
       >
         {/* Header */}
         <div className="flex flex-col items-center text-center mb-6">
-          <div className="p-4 bg-primary/5 rounded-full mb-3 text-[#2563eb]">
+          
+          <div className="p-4 bg-secondary text-primary rounded-full mb-3">
             <GraduationCap className="w-10 h-10" />
           </div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Hunter Study Spaces</h1>
@@ -202,15 +203,17 @@ export function LoginScreen({ onLoginSuccess, isDesktop }: LoginScreenProps) {
                 />
               </div>
               {error && <ErrorBanner msg={error} />}
+              
               <button
                 type="submit" disabled={isLoading}
-                className="w-full py-3.5 bg-[#2563eb] text-white font-medium rounded-xl hover:bg-[#1d4ed8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                className="w-full py-3.5 bg-primary text-primary-foreground font-medium rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
               >
                 {isLoading ? 'Signing in…' : 'Sign In'}
               </button>
+              
               <p className="text-center text-sm text-muted-foreground">
                 Don't have an account?{' '}
-                <button type="button" onClick={() => { clearMessages(); setStep('signup'); }} className="text-[#2563eb] hover:underline font-medium">
+                <button type="button" onClick={() => { clearMessages(); setStep('signup'); }} className="text-primary hover:underline font-medium">
                   Sign up
                 </button>
               </p>
@@ -252,15 +255,17 @@ export function LoginScreen({ onLoginSuccess, isDesktop }: LoginScreenProps) {
                 />
               </div>
               {error && <ErrorBanner msg={error} />}
+              
               <button
                 type="submit" disabled={isLoading}
-                className="w-full py-3.5 bg-[#2563eb] text-white font-medium rounded-xl hover:bg-[#1d4ed8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                className="w-full py-3.5 bg-primary text-primary-foreground font-medium rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
               >
                 {isLoading ? 'Creating account…' : 'Create Account'}
               </button>
+              
               <p className="text-center text-sm text-muted-foreground">
                 Already have an account?{' '}
-                <button type="button" onClick={() => { clearMessages(); setStep('login'); }} className="text-[#2563eb] hover:underline font-medium">
+                <button type="button" onClick={() => { clearMessages(); setStep('login'); }} className="text-primary hover:underline font-medium">
                   Sign in
                 </button>
               </p>
@@ -285,12 +290,14 @@ export function LoginScreen({ onLoginSuccess, isDesktop }: LoginScreenProps) {
               </div>
               {error && <ErrorBanner msg={error} />}
               {info && <InfoBanner msg={info} />}
+              
               <button
                 type="submit" disabled={isLoading || code.length !== 6}
-                className="w-full py-3.5 bg-[#2563eb] text-white font-medium rounded-xl hover:bg-[#1d4ed8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                className="w-full py-3.5 bg-primary text-primary-foreground font-medium rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
               >
                 {isLoading ? 'Verifying…' : 'Verify Email'}
               </button>
+              
               <div className="flex justify-between items-center text-sm">
                 <button
                   type="button"
@@ -301,7 +308,7 @@ export function LoginScreen({ onLoginSuccess, isDesktop }: LoginScreenProps) {
                 </button>
                 <button
                   type="button" onClick={handleResend} disabled={resendCooldown}
-                  className="text-[#2563eb] hover:underline disabled:opacity-40 disabled:cursor-not-allowed font-medium"
+                  className="text-primary hover:underline disabled:opacity-40 disabled:cursor-not-allowed font-medium"
                 >
                   {resendCooldown ? 'Resent!' : 'Resend code'}
                 </button>
