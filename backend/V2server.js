@@ -42,26 +42,42 @@ app.post('/api/rooms/:roomId/checkin', async function (req, res) {
 });
 
 // 2. Fetch Live Room Occupancy Data & Subjects Summary
-app.get('/api/rooms/:roomId/occupancy', async (req, res) => {
+app.get('/api/rooms/:roomId/occupancy', async function (req, res) {
   try {
-    const { roomId } = req.params;
-    const checkInCollection = db.collection('room_occupancy');
+    var roomId = req.params.roomId;
+    var checkInCollection = db.collection('room_occupancy');
 
     // Auto-expiry threshold: Ignore check-ins older than 2 hours
-    const dynamicThreshold = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    var currentMillseconds = Date.now();
+    var twoHoursInMilliseconds = 2 * 60 * 60 * 1000;
+    var cutoffTimeValue = currentMillseconds - twoHoursInMilliseconds;
+    var dynamicThreshold = new Date(cutoffTimeValue);
 
-    // Pull active students in this specific room
-    const activeCheckIns = await checkInCollection.find({
+    var dbQuery = {
       roomId: roomId,
       timestamp: { $gte: dynamicThreshold }
-    }).toArray();
+    };
+
+    // Pull active students in this specific room
+    var activeCheckIns = await dbCheckInCollection.find(dbQuery).toArray();
 
     // Aggregate subjects to see what people are studying
-    const subjectBreakdown = {};
-    activeCheckIns.forEach(user => {
-      const sub = user.subject.trim().toUpperCase();
-      subjectBreakdown[sub] = (subjectBreakdown[sub] || 0) + 1;
-    });
+    var subjectBreakdown = {};
+    
+    // Using an old-school for loop instead of forEach or map
+    for (var i = 0; i < activeCheckIns.length; i = i + 1) {
+      var currentUser = activeCheckIns[i];
+      var rawSubject = currentUser.subject;
+      var cleanSubject = rawSubject.trim().toUpperCase();
+      
+      if (subjectBreakdown[cleanSubject] == undefined) {
+        subjectBreakdown[cleanSubject] = 1;
+      } else {
+        subjectBreakdown[cleanSubject] = subjectBreakdown[cleanSubject] + 1;
+      }
+    }
+
+    var totalStudentsCount = activeCheckIns.length;
 
     res.json({
       roomId: roomId,
