@@ -25,7 +25,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, DELETE, PATCH, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
@@ -271,6 +271,137 @@ app.delete('/api/favorites/:roomId', requireAuth, async (req, res) => {
   }
 });
 
+// ── Occupancy endpoints ───────────────────────────────────────────────────────
+// Inspired by teammate's V2server.js check-in concept, rebuilt with JWT auth
+// and time-bounded expiry instead of the old EMPLID + 2-hour cutoff approach.
+
+// GET /api/occupancy/me  →  the logged-in user's current active room report
+app.get('/api/occupancy/me', requireAuth, async (req, res) => {
+  if (!db) return res.json(null);
+  try {
+    const report = await db.collection('occupancy_reports').findOne({
+      userId: req.user.userId,
+      expiresAt: { $gt: new Date() },
+    });
+    if (!report) return res.json(null);
+    return res.json({
+      room:      report.room,
+      building:  report.building,
+      expiresAt: report.expiresAt,
+      createdAt: report.createdAt,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE /api/occupancy/me  →  clear the logged-in user's active report (any room)
+app.delete('/api/occupancy/me', requireAuth, async (req, res) => {
+  if (!db) return res.status(503).json({ error: 'Database unavailable.' });
+  try {
+    await db.collection('occupancy_reports').deleteMany({ userId: req.user.userId });
+    return res.json({ success: true });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/occupancy/:room  →  active student reports (optional auth to get myReport)
+app.get('/api/occupancy/:room', async (req, res) => {
+  if (!db) return res.json({ count: 0, myReport: null, reports: [] });
+  try {
+    const room = decodeURIComponent(req.params.room);
+    const reports = await db.collection('occupancy_reports').find({
+      room, expiresAt: { $gt: new Date() },
+    }).toArray();
+
+    let myReport = null;
+    const auth = req.headers.authorization;
+    if (auth?.startsWith('Bearer ')) {
+      try {
+        const payload = jwt.verify(auth.slice(7), JWT_SECRET);
+        const mine = reports.find(r => r.userId === payload.userId);
+        if (mine) myReport = { expiresAt: mine.expiresAt };
+      } catch { /* invalid token — ignore */ }
+    }
+
+    return res.json({
+      count: reports.length,
+      myReport,
+      reports: reports.map(r => ({ userName: r.userName, expiresAt: r.expiresAt })),
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/occupancy  →  create or update the current user's report (upsert by userId+room)
+app.post('/api/occupancy', requireAuth, async (req, res) => {
+  if (!db) return res.status(503).json({ error: 'Database unavailable.' });
+  const { room, building, duration, extend } = req.body;
+  if (!room || !duration) return res.status(400).json({ error: 'room and duration are required.' });
+
+  const now = new Date();
+  // When extend=true, add duration to the existing report's expiresAt (not from now)
+  let baseTime = now;
+  if (extend && duration !== 'next_class') {
+    try {
+      const existing = await db.collection('occupancy_reports').findOne({
+        userId: req.user.userId, room, expiresAt: { $gt: now },
+      });
+      if (existing) baseTime = existing.expiresAt;
+    } catch { /* fall back to now */ }
+  }
+
+  let expiresAt;
+  if (duration === '1hour') {
+    expiresAt = new Date(baseTime.getTime() + 60 * 60 * 1000);
+  } else if (duration === '2hours') {
+    expiresAt = new Date(baseTime.getTime() + 2 * 60 * 60 * 1000);
+  } else if (duration === 'next_class') {
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayAbbrev = DAY_NAME_TO_ABBREV[dayNames[now.getDay()]] ?? 'Mo';
+    const timeMinutes = now.getHours() * 60 + now.getMinutes();
+    const { availableFor } = computeAvailability(room, dayAbbrev, timeMinutes);
+    expiresAt = availableFor !== null
+      ? new Date(now.getTime() + availableFor * 60 * 1000)
+      : (() => { const d = new Date(now); d.setHours(23, 59, 59, 0); return d; })();
+  } else {
+    return res.status(400).json({ error: 'duration must be 1hour, 2hours, or next_class.' });
+  }
+
+  try {
+    const student = await db.collection('students').findOne({ email: req.user.email });
+    const userName = student?.name || req.user.email;
+
+    // Enforce one active report per user — remove any reports for other rooms
+    await db.collection('occupancy_reports').deleteMany({
+      userId: req.user.userId, room: { $ne: room },
+    });
+
+    await db.collection('occupancy_reports').updateOne(
+      { userId: req.user.userId, room },
+      { $set: { userId: req.user.userId, userName, room, building: building || null, expiresAt, createdAt: now } },
+      { upsert: true }
+    );
+    return res.json({ success: true, expiresAt });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE /api/occupancy/:room  →  clear the current user's report for a specific room
+app.delete('/api/occupancy/:room', requireAuth, async (req, res) => {
+  if (!db) return res.status(503).json({ error: 'Database unavailable.' });
+  try {
+    const room = decodeURIComponent(req.params.room);
+    await db.collection('occupancy_reports').deleteOne({ userId: req.user.userId, room });
+    return res.json({ success: true });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 // ── JSON schedule helpers ─────────────────────────────────────────────────────
 
 function getBuildingFromRoom(room) {
@@ -467,7 +598,7 @@ app.get('/api/rooms/buildings', (req, res) => {
 });
 
 // GET /api/rooms/available?building=West%20Building&day=Tuesday&time=14:30&floor=3
-app.get('/api/rooms/available', (req, res) => {
+app.get('/api/rooms/available', async (req, res) => {
   const { building, day, time, floor } = req.query;
   if (!day || !time) {
     return res.status(400).json({ error: 'day and time query params are required' });
@@ -476,50 +607,65 @@ app.get('/api/rooms/available', (req, res) => {
   const dayAbbrev = DAY_NAME_TO_ABBREV[day] ?? day;
   const [hStr, mStr] = time.split(':');
   const timeMinutes = parseInt(hStr) * 60 + parseInt(mStr || '0');
-  const floorFilter = floor ? floor.toString().toUpperCase() : null; // Floor can be "C", "B", or "1", "2", etc.
+  const floorFilter = floor ? floor.toString().toUpperCase() : null;
 
-  // Find rooms occupied at this moment
   const occupied = new Set();
   for (const s of schedule) {
     if (building && s.building !== building) continue;
     for (const b of s.timeBlocks) {
-      if (
-        b.days.includes(dayAbbrev) &&
-        timeMinutes >= b.startMinutes &&
-        timeMinutes < b.endMinutes
-      ) {
+      if (b.days.includes(dayAbbrev) && timeMinutes >= b.startMinutes && timeMinutes < b.endMinutes) {
         occupied.add(s.room);
       }
     }
   }
 
-  // Collect unique rooms in the requested building
   const roomMap = new Map();
   for (const s of schedule) {
     if (building && s.building !== building) continue;
     if (!roomMap.has(s.room)) roomMap.set(s.room, s.building);
   }
 
-  // Return rooms that are not occupied, with availability info
   const results = [];
   for (const [room, bldg] of roomMap) {
     if (occupied.has(room)) continue;
     const roomNumber = getRoomNumber(room);
     const roomFloor = getFloor(roomNumber);
-    if (floorFilter !== null && roomFloor.toString().toUpperCase() !== floorFilter) continue; // Filter by floor if specified
+    if (floorFilter !== null && roomFloor.toString().toUpperCase() !== floorFilter) continue;
     const { nextClass, availableFor } = computeAvailability(room, dayAbbrev, timeMinutes);
     results.push({
-      id:           room,
-      building:     bldg,
+      id:                        room,
+      building:                  bldg,
       roomNumber,
-      floor:        roomFloor,
+      floor:                     roomFloor,
       availableFor,
+      availableForMinutes:       availableFor,
       nextClass,
-      type:         'Classroom',
+      nextClassStart:            nextClass,
+      noMoreClassesToday:        nextClass === null,
+      type:                      'Classroom',
+      isAvailable:               true,
+      studentOccupancyCount:     0,
+      isStudentReportedOccupied: false,
     });
   }
 
-  results.sort((a, b) => b.availableFor - a.availableFor);
+  // Enrich with live student occupancy counts
+  if (db && results.length > 0) {
+    try {
+      const roomIds = results.map(r => r.id);
+      const docs = await db.collection('occupancy_reports').find({
+        room: { $in: roomIds }, expiresAt: { $gt: new Date() },
+      }).toArray();
+      const byRoom = new Map();
+      for (const d of docs) byRoom.set(d.room, (byRoom.get(d.room) || 0) + 1);
+      for (const r of results) {
+        r.studentOccupancyCount     = byRoom.get(r.id) || 0;
+        r.isStudentReportedOccupied = r.studentOccupancyCount > 0;
+      }
+    } catch { /* non-fatal: occupancy data unavailable */ }
+  }
+
+  results.sort((a, b) => (b.availableFor ?? Infinity) - (a.availableFor ?? Infinity));
   res.json(results);
 });
 
@@ -574,21 +720,29 @@ app.get('/api/debug/room/:room', (req, res) => {
   });
 });
 
-// GET /api/rooms/all  →  all unique rooms (used for favorites display)
-app.get('/api/rooms/all', (req, res) => {
+// GET /api/rooms/all  →  all unique rooms with availability (favorites display + live stats)
+app.get('/api/rooms/all', async (req, res) => {
   const { day, time } = req.query;
   let dayAbbrev, timeMinutes;
-  // specified day/time
   if (day && time) {
     dayAbbrev = DAY_NAME_TO_ABBREV[day] ?? day;
     const [hStr, mStr] = time.split(':');
     timeMinutes = parseInt(hStr) * 60 + parseInt(mStr || '0');
   } else {
-    // default to current day/time
     const now = new Date();
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     dayAbbrev = DAY_NAME_TO_ABBREV[dayNames[now.getDay()]] ?? 'Mo';
     timeMinutes = now.getHours() * 60 + now.getMinutes();
+  }
+
+  // Track which rooms have a class happening right now
+  const occupied = new Set();
+  for (const s of schedule) {
+    for (const b of s.timeBlocks) {
+      if (b.days.includes(dayAbbrev) && timeMinutes >= b.startMinutes && timeMinutes < b.endMinutes) {
+        occupied.add(s.room);
+      }
+    }
   }
 
   const roomMap = new Map();
@@ -597,19 +751,43 @@ app.get('/api/rooms/all', (req, res) => {
       const roomNumber = getRoomNumber(s.room);
       const { nextClass, availableFor } = computeAvailability(s.room, dayAbbrev, timeMinutes);
       roomMap.set(s.room, {
-        id:          s.room,
-        building:    s.building,
+        id:                        s.room,
+        building:                  s.building,
         roomNumber,
-        floor:       getFloor(roomNumber),
+        floor:                     getFloor(roomNumber),
         availableFor,
+        availableForMinutes:       availableFor,
         nextClass,
-        type:        'Classroom',
+        nextClassStart:            nextClass,
+        noMoreClassesToday:        nextClass === null,
+        type:                      'Classroom',
+        isAvailable:               !occupied.has(s.room),
+        studentOccupancyCount:     0,
+        isStudentReportedOccupied: false,
       });
     }
   }
+
   const rooms = [...roomMap.values()].sort((a, b) =>
     a.building.localeCompare(b.building) || a.roomNumber.localeCompare(b.roomNumber)
   );
+
+  // Enrich with live student occupancy counts
+  if (db && rooms.length > 0) {
+    try {
+      const roomIds = rooms.map(r => r.id);
+      const docs = await db.collection('occupancy_reports').find({
+        room: { $in: roomIds }, expiresAt: { $gt: new Date() },
+      }).toArray();
+      const byRoom = new Map();
+      for (const d of docs) byRoom.set(d.room, (byRoom.get(d.room) || 0) + 1);
+      for (const r of rooms) {
+        r.studentOccupancyCount     = byRoom.get(r.id) || 0;
+        r.isStudentReportedOccupied = r.studentOccupancyCount > 0;
+      }
+    } catch { /* non-fatal */ }
+  }
+
   res.json(rooms);
 });
 
@@ -741,6 +919,14 @@ app.get('/api/filter-rooms', async (req, res) => {
 async function start() {
   await connectDB();
   await loadSchedule();
+  // TTL index: MongoDB auto-deletes expired occupancy reports
+  if (db) {
+    try {
+      await db.collection('occupancy_reports').createIndex(
+        { expiresAt: 1 }, { expireAfterSeconds: 0 }
+      );
+    } catch { /* index may already exist */ }
+  }
   app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
   });

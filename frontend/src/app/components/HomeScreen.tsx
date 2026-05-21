@@ -7,11 +7,13 @@ interface HomeScreenProps {
   buildings?: string[];
   isSearching?: boolean;
   searchError?: string | null;
+  availableNowCount?: number;
+  buildingCount?: number;
+  totalRoomsCount?: number;
 }
 
 interface SearchFilters {
   building?: string;
-  roomType?: string;
   floor?: string;
   day: string;
   time: string;
@@ -27,21 +29,32 @@ const DEFAULT_BUILDINGS = [
   'Roosevelt House',
 ];
 
-export function HomeScreen({ onSearch, isDesktop, buildings, isSearching = false, searchError = null }: HomeScreenProps) {
+export function HomeScreen({
+  onSearch,
+  isDesktop,
+  buildings,
+  isSearching = false,
+  searchError = null,
+  availableNowCount,
+  buildingCount,
+  totalRoomsCount,
+}: HomeScreenProps) {
   const [building, setBuilding] = useState('');
   const [floor, setFloor] = useState('');
   const [timeFilter, setTimeFilter] = useState('now');
-  const [roomType, setRoomType] = useState('all');
-  const [selectedDay, setSelectedDay] = useState(new Date().toLocaleString('en-US', { weekday: 'long' }));
-  const [selectedTime, setSelectedTime] = useState(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }));
+  const [selectedDay, setSelectedDay] = useState(
+    new Date().toLocaleString('en-US', { weekday: 'long' })
+  );
+  const [selectedTime, setSelectedTime] = useState(
+    new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
+  );
 
-  const buildingList = (buildings && buildings.length > 0) ? buildings : DEFAULT_BUILDINGS;
-
+  const buildingList = buildings && buildings.length > 0 ? buildings : DEFAULT_BUILDINGS;
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   const handleSearch = () => {
     const filters: SearchFilters = {
-      day:  timeFilter === 'now'
+      day: timeFilter === 'now'
         ? new Date().toLocaleString('en-US', { weekday: 'long' })
         : selectedDay,
       time: timeFilter === 'now'
@@ -52,6 +65,10 @@ export function HomeScreen({ onSearch, isDesktop, buildings, isSearching = false
     if (floor) filters.floor = floor;
     onSearch(filters);
   };
+
+  const statAvailable  = availableNowCount  != null ? String(availableNowCount)  : '—';
+  const statBuildings  = buildingCount      != null ? String(buildingCount)       : String(buildingList.length);
+  const statTotalRooms = totalRoomsCount    != null ? String(totalRoomsCount)     : '—';
 
   return (
     <div className={`min-h-full ${isDesktop ? 'px-12 py-12' : 'px-6 py-8'}`}>
@@ -71,7 +88,8 @@ export function HomeScreen({ onSearch, isDesktop, buildings, isSearching = false
 
         {/* Search Filters */}
         <div className={isDesktop ? 'space-y-6' : 'space-y-5'}>
-          {/* Building Selection */}
+
+          {/* Building */}
           <div>
             <label className="flex items-center gap-2 mb-3 text-sm text-foreground">
               <MapPin className="w-4 h-4 text-muted-foreground" />
@@ -84,14 +102,12 @@ export function HomeScreen({ onSearch, isDesktop, buildings, isSearching = false
             >
               <option value="">Select a building</option>
               {buildingList.map((b) => (
-                <option key={b} value={b}>
-                  {b}
-                </option>
+                <option key={b} value={b}>{b}</option>
               ))}
             </select>
           </div>
 
-          {/* Floor Selection */}
+          {/* Floor */}
           <div>
             <label className="flex items-center gap-2 mb-3 text-sm text-foreground">
               <Grid3x3 className="w-4 h-4 text-muted-foreground" />
@@ -104,25 +120,13 @@ export function HomeScreen({ onSearch, isDesktop, buildings, isSearching = false
             >
               <option value="">Any Floor</option>
               <option value="C">Floor C</option>
-              <option value="1">Floor 1</option>
-              <option value="2">Floor 2</option>
-              <option value="3">Floor 3</option>
-              <option value="4">Floor 4</option>
-              <option value="5">Floor 5</option>
-              <option value="6">Floor 6</option>
-              <option value="7">Floor 7</option>
-              <option value="8">Floor 8</option>
-              <option value="9">Floor 9</option>
-              <option value="10">Floor 10</option>
-              <option value="11">Floor 11</option>
-              <option value="12">Floor 12</option>
-              <option value="13">Floor 13</option>
-              <option value="14">Floor 14</option>
-              <option value="15">Floor 15</option>
+              {Array.from({ length: 15 }, (_, i) => i + 1).map(n => (
+                <option key={n} value={String(n)}>Floor {n}</option>
+              ))}
             </select>
           </div>
 
-          {/* Time Selection */}
+          {/* Time */}
           <div>
             <label className="flex items-center gap-2 mb-3 text-sm text-foreground">
               <Clock className="w-4 h-4 text-muted-foreground" />
@@ -151,7 +155,6 @@ export function HomeScreen({ onSearch, isDesktop, buildings, isSearching = false
               </button>
             </div>
 
-            {/* Custom Time Form */}
             {timeFilter === 'custom' && (
               <div className="bg-white border border-border rounded-xl p-4 space-y-4">
                 <div>
@@ -162,13 +165,10 @@ export function HomeScreen({ onSearch, isDesktop, buildings, isSearching = false
                     className="w-full px-3 py-2.5 bg-white border border-border rounded-lg appearance-none cursor-pointer hover:border-[#2563eb]/50 transition-colors text-sm"
                   >
                     {days.map((day) => (
-                      <option key={day} value={day}>
-                        {day}
-                      </option>
+                      <option key={day} value={day}>{day}</option>
                     ))}
                   </select>
                 </div>
-
                 <div>
                   <label className="block text-xs text-muted-foreground mb-2">Time</label>
                   <input
@@ -180,25 +180,6 @@ export function HomeScreen({ onSearch, isDesktop, buildings, isSearching = false
                 </div>
               </div>
             )}
-
-          </div>
-
-          {/* Room Type Filter */}
-          <div>
-            <label className="flex items-center gap-2 mb-3 text-sm text-foreground">
-              <Grid3x3 className="w-4 h-4 text-muted-foreground" />
-              Room Type
-            </label>
-            <select
-              value={roomType}
-              onChange={(e) => setRoomType(e.target.value)}
-              className="w-full px-4 py-3.5 bg-white border border-border rounded-xl appearance-none cursor-pointer hover:border-[#2563eb]/50 transition-colors"
-            >
-              <option value="all">All Rooms</option>
-              <option value="Classroom">Classroom</option>
-              <option value="Lecture Hall">Lecture Hall</option>
-              <option value="Computer Lab">Computer Lab</option>
-            </select>
           </div>
         </div>
 
@@ -215,20 +196,32 @@ export function HomeScreen({ onSearch, isDesktop, buildings, isSearching = false
           <p className="mt-3 text-sm text-red-500 text-center">{searchError}</p>
         )}
 
-        {/* Quick Stats */}
+        {/* Live Stats */}
         <div className={`${isDesktop ? 'mt-16 pt-12' : 'mt-12 pt-8'} border-t border-border`}>
           <div className={`grid grid-cols-3 ${isDesktop ? 'gap-8' : 'gap-4'} text-center`}>
             <div>
-              <div className={`${isDesktop ? 'text-3xl' : 'text-2xl'} mb-1 text-foreground`}>24</div>
-              <div className={`${isDesktop ? 'text-sm' : 'text-xs'} text-muted-foreground`}>Available Now</div>
+              <div className={`${isDesktop ? 'text-3xl' : 'text-2xl'} mb-1 text-foreground`}>
+                {statAvailable}
+              </div>
+              <div className={`${isDesktop ? 'text-sm' : 'text-xs'} text-muted-foreground`}>
+                Available Now
+              </div>
             </div>
             <div>
-              <div className={`${isDesktop ? 'text-3xl' : 'text-2xl'} mb-1 text-foreground`}>6</div>
-              <div className={`${isDesktop ? 'text-sm' : 'text-xs'} text-muted-foreground`}>Buildings</div>
+              <div className={`${isDesktop ? 'text-3xl' : 'text-2xl'} mb-1 text-foreground`}>
+                {statBuildings}
+              </div>
+              <div className={`${isDesktop ? 'text-sm' : 'text-xs'} text-muted-foreground`}>
+                Buildings
+              </div>
             </div>
             <div>
-              <div className={`${isDesktop ? 'text-3xl' : 'text-2xl'} mb-1 text-foreground`}>150+</div>
-              <div className={`${isDesktop ? 'text-sm' : 'text-xs'} text-muted-foreground`}>Total Rooms</div>
+              <div className={`${isDesktop ? 'text-3xl' : 'text-2xl'} mb-1 text-foreground`}>
+                {statTotalRooms}
+              </div>
+              <div className={`${isDesktop ? 'text-sm' : 'text-xs'} text-muted-foreground`}>
+                Total Rooms
+              </div>
             </div>
           </div>
         </div>

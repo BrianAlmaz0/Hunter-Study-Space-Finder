@@ -4,7 +4,7 @@ import { ResultsScreen } from './components/ResultsScreen';
 import { DetailScreen } from './components/DetailScreen';
 import { FavoritesScreen } from './components/FavoritesScreen';
 import { LoginScreen } from './LoginScreen';
-import { Home, Search, Heart, ChevronLeft, LogOut } from 'lucide-react';
+import { Home, Search, Heart, ChevronLeft, LogOut, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 type Screen = 'home' | 'results' | 'detail' | 'favorites';
@@ -26,6 +26,16 @@ interface Room {
   nextClass: string | null;
   type: string;
   capacity?: number;
+  isAvailable?: boolean;
+  studentOccupancyCount?: number;
+  isStudentReportedOccupied?: boolean;
+}
+
+interface OccupancyReport {
+  room: string;
+  building: string | null;
+  expiresAt: string;
+  createdAt: string;
 }
 
 interface StudentUser {
@@ -34,6 +44,16 @@ interface StudentUser {
 }
 
 const API = 'http://localhost:3001';
+
+function computeTimeRemaining(expiresAt: string): string {
+  const diff = new Date(expiresAt).getTime() - Date.now();
+  if (diff <= 0) return 'Expired';
+  const mins = Math.round(diff / 60000);
+  if (mins < 60) return `${mins} min`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
 
 export default function App() {
   const [user, setUser] = useState<StudentUser | null>(null);
@@ -52,6 +72,7 @@ export default function App() {
     day: new Date().toLocaleString('en-US', { weekday: 'long' }),
     time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
   });
+  const [currentOccupancy, setCurrentOccupancy] = useState<OccupancyReport | null>(null);
 
   useEffect(() => {
     const checkDesktop = () => setIsDesktop(window.innerWidth >= 1024);
@@ -106,6 +127,59 @@ export default function App() {
     });
   }, [user]);
 
+  const fetchCurrentOccupancy = async () => {
+    const token = localStorage.getItem('auth_token');
+    if (!token) return;
+    try {
+      const [occRes, roomsRes] = await Promise.all([
+        fetch(`${API}/api/occupancy/me`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API}/api/rooms/all`),
+      ]);
+      if (occRes.ok) setCurrentOccupancy(await occRes.json());
+      if (roomsRes.ok) setAllRooms(await roomsRes.json());
+    } catch {}
+  };
+
+  useEffect(() => {
+    if (!user) { setCurrentOccupancy(null); return; }
+    fetchCurrentOccupancy();
+    const interval = setInterval(fetchCurrentOccupancy, 60 * 1000);
+    return () => clearInterval(interval);
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const extendOccupancy = async (duration: '1hour' | '2hours' | 'next_class') => {
+    const token = localStorage.getItem('auth_token');
+    if (!token || !currentOccupancy) return;
+    try {
+      const res = await fetch(`${API}/api/occupancy`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          room: currentOccupancy.room,
+          building: currentOccupancy.building,
+          duration,
+          extend: duration !== 'next_class',
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCurrentOccupancy(prev => prev ? { ...prev, expiresAt: data.expiresAt } : null);
+      }
+    } catch {}
+  };
+
+  const leaveRoom = async () => {
+    const token = localStorage.getItem('auth_token');
+    if (!token) return;
+    try {
+      const res = await fetch(`${API}/api/occupancy/me`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) setCurrentOccupancy(null);
+    } catch {}
+  };
+
   const handleLoginSuccess = (studentData: StudentUser, token: string) => {
     localStorage.setItem('student_session', JSON.stringify(studentData));
     localStorage.setItem('auth_token', token);
@@ -117,6 +191,7 @@ export default function App() {
     localStorage.removeItem('auth_token');
     setUser(null);
     setFavorites([]);
+    setCurrentOccupancy(null);
     setCurrentScreen('home');
     setSelectedRoom(null);
   };
@@ -186,7 +261,7 @@ export default function App() {
     <AnimatePresence mode="wait">
       {currentScreen === 'home' && (
         <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <HomeScreen onSearch={handleSearchSubmit} isDesktop={isDesktop} buildings={buildings} isSearching={isSearching} searchError={searchError} />
+          <HomeScreen onSearch={handleSearchSubmit} isDesktop={isDesktop} buildings={buildings} isSearching={isSearching} searchError={searchError} availableNowCount={allRooms.length > 0 ? allRooms.filter(r => r.isAvailable && !r.isStudentReportedOccupied).length : undefined} totalRoomsCount={allRooms.length > 0 ? allRooms.length : undefined} />
         </motion.div>
       )}
       {currentScreen === 'results' && (
@@ -196,7 +271,7 @@ export default function App() {
       )}
       {currentScreen === 'detail' && selectedRoom && (
         <motion.div key="detail" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <DetailScreen room={selectedRoom} isFavorite={favorites.includes(selectedRoom.id)} onToggleFavorite={() => toggleFavorite(selectedRoom.id)} isDesktop={isDesktop} searchDay={searchFilters.day} searchTime={searchFilters.time} />
+          <DetailScreen room={selectedRoom} isFavorite={favorites.includes(selectedRoom.id)} onToggleFavorite={() => toggleFavorite(selectedRoom.id)} isDesktop={isDesktop} searchDay={searchFilters.day} searchTime={searchFilters.time} isAuthenticated={true} onOccupancyChange={fetchCurrentOccupancy} activeRoom={currentOccupancy?.room ?? null} />
         </motion.div>
       )}
       {currentScreen === 'favorites' && (
@@ -216,17 +291,59 @@ export default function App() {
             <p className="text-sm text-muted-foreground mt-1">Find study rooms</p>
           </div>
 
-          <nav className="flex-1 p-4">
-            <button onClick={() => setCurrentScreen('home')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors mb-2 ${currentScreen === 'home' ? 'bg-sidebar-primary text-sidebar-primary-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'}`}>
-              <Home className="w-5 h-5" /><span>Search</span>
-            </button>
-            <button onClick={() => setCurrentScreen('results')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors mb-2 ${currentScreen === 'results' ? 'bg-sidebar-primary text-sidebar-primary-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'}`}>
-              <Search className="w-5 h-5" /><span>Results</span>
-            </button>
-            <button onClick={() => setCurrentScreen('favorites')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${currentScreen === 'favorites' ? 'bg-sidebar-primary text-sidebar-primary-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'}`}>
-              <Heart className="w-5 h-5" /><span>Favorites</span>
-            </button>
-          </nav>
+          <div className="flex-1 overflow-y-auto">
+            <nav className="p-4">
+              <button onClick={() => setCurrentScreen('home')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors mb-2 ${currentScreen === 'home' ? 'bg-sidebar-primary text-sidebar-primary-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'}`}>
+                <Home className="w-5 h-5" /><span>Search</span>
+              </button>
+              <button onClick={() => setCurrentScreen('results')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors mb-2 ${currentScreen === 'results' ? 'bg-sidebar-primary text-sidebar-primary-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'}`}>
+                <Search className="w-5 h-5" /><span>Results</span>
+              </button>
+              <button onClick={() => setCurrentScreen('favorites')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${currentScreen === 'favorites' ? 'bg-sidebar-primary text-sidebar-primary-foreground' : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'}`}>
+                <Heart className="w-5 h-5" /><span>Favorites</span>
+              </button>
+            </nav>
+
+            {currentOccupancy && (
+              <div className="px-4 pb-4">
+                <div className="text-xs text-muted-foreground uppercase tracking-wide mb-2 px-1">Current Room</div>
+                <div className="bg-sidebar-accent rounded-xl p-3">
+                  <div className="text-sm text-sidebar-foreground">{currentOccupancy.room.split(' ').pop()}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5 mb-1">{currentOccupancy.building}</div>
+                  <div className="flex items-center gap-1.5 text-xs text-amber-600 mb-3">
+                    <Users className="w-3 h-3" />
+                    {computeTimeRemaining(currentOccupancy.expiresAt)} remaining
+                  </div>
+                  <div className="space-y-1">
+                    <button
+                      onClick={() => extendOccupancy('1hour')}
+                      className="w-full text-left text-xs px-3 py-2 rounded-lg text-sidebar-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground transition-colors"
+                    >
+                      + Add 1 hour
+                    </button>
+                    <button
+                      onClick={() => extendOccupancy('2hours')}
+                      className="w-full text-left text-xs px-3 py-2 rounded-lg text-sidebar-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground transition-colors"
+                    >
+                      + Add 2 hours
+                    </button>
+                    <button
+                      onClick={() => extendOccupancy('next_class')}
+                      className="w-full text-left text-xs px-3 py-2 rounded-lg text-sidebar-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground transition-colors"
+                    >
+                      Stay until next class
+                    </button>
+                    <button
+                      onClick={leaveRoom}
+                      className="w-full text-left text-xs px-3 py-2 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors text-muted-foreground"
+                    >
+                      Leave room
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className="p-4 border-t border-sidebar-border">
             <div className="text-xs text-muted-foreground mb-3">
@@ -265,6 +382,24 @@ export default function App() {
         </div>
       )}
 
+      {currentOccupancy && currentScreen !== 'detail' && (
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 text-xs font-medium text-amber-900 truncate">
+                <Users className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate">{currentOccupancy.room} · {computeTimeRemaining(currentOccupancy.expiresAt)} left</span>
+              </div>
+              <div className="text-xs text-amber-700">{currentOccupancy.building}</div>
+            </div>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <button onClick={() => extendOccupancy('1hour')} className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded border border-amber-200 hover:bg-amber-200 transition-colors">+1h</button>
+              <button onClick={() => extendOccupancy('2hours')} className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded border border-amber-200 hover:bg-amber-200 transition-colors">+2h</button>
+              <button onClick={leaveRoom} className="text-xs text-amber-700 px-2 py-1 rounded border border-amber-300 hover:bg-amber-100 transition-colors">Leave</button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex-1 overflow-auto">{screens}</div>
 
       {currentScreen !== 'detail' && (
