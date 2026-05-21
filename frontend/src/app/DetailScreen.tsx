@@ -33,7 +33,6 @@ export function DetailScreen({ room, isDesktop }: DetailScreenProps) {
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch the dynamic crowdsourced room data on component load
   useEffect(() => {
     const fetchLiveOccupancy = async () => {
       try {
@@ -51,7 +50,7 @@ export function DetailScreen({ room, isDesktop }: DetailScreenProps) {
     };
 
     fetchLiveOccupancy();
-    const interval = setInterval(fetchLiveOccupancy, 30000); // Re-poll every 30s
+    const interval = setInterval(fetchLiveOccupancy, 30000);
     return () => clearInterval(interval);
   }, [room.id, isCheckedIn]);
 
@@ -61,7 +60,6 @@ export function DetailScreen({ room, isDesktop }: DetailScreenProps) {
 
     setIsSubmitting(true);
     try {
-      // Pull student credentials directly out of your active session storage
       const sessionRaw = localStorage.getItem('student_session');
       const student = sessionRaw ? JSON.parse(sessionRaw) : { name: 'Anonymous', emplid: '00000000' };
 
@@ -89,10 +87,9 @@ export function DetailScreen({ room, isDesktop }: DetailScreenProps) {
   return (
     <div className={`p-6 space-y-6 max-w-md mx-auto ${isDesktop ? 'max-w-xl' : ''}`}>
       
-      {/* 1. Live Headcount Overview Card */}
-      <div className="bg-white rounded-2xl border border-border p-5 shadow-sm flex items-center justify-between">
+      <div className="bg-card rounded-2xl border border-border p-5 shadow-sm flex items-center justify-between">
         <div className="flex items-center gap-3.5">
-          <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
+          <div className="p-3 bg-secondary text-primary rounded-xl">
             <Users className="w-6 h-6" />
           </div>
           <div>
@@ -102,20 +99,19 @@ export function DetailScreen({ room, isDesktop }: DetailScreenProps) {
             </p>
           </div>
         </div>
-        <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${occupancy.totalStudents > 0 ? 'bg-emerald-50 text-emerald-700 animate-pulse' : 'bg-slate-100 text-slate-500'}`}>
+        <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${occupancy.totalStudents > 0 ? 'bg-emerald-50 text-emerald-700 animate-pulse' : 'bg-muted text-muted-foreground'}`}>
           {occupancy.totalStudents > 0 ? '• Active Vibe' : 'Empty'}
         </span>
       </div>
 
-      {/* 2. Subjects Breakdown Monitor Layout */}
-      <div className="bg-white rounded-2xl border border-border p-5 shadow-sm space-y-4">
+      <div className="bg-card rounded-2xl border border-border p-5 shadow-sm space-y-4">
         <h3 className="text-sm font-semibold tracking-wide uppercase text-muted-foreground flex items-center gap-2">
-          <BookOpen className="w-4 h-4 text-blue-600" />
+          <BookOpen className="w-4 h-4 text-primary" />
           Study Topics Right Now
         </h3>
 
         {Object.keys(occupancy.subjectsStudied).length === 0 ? (
-          <p className="text-sm text-muted-foreground italic bg-slate-50/50 p-4 rounded-xl text-center border border-dashed">
+          <p className="text-sm text-muted-foreground italic bg-muted/50 p-4 rounded-xl text-center border border-dashed">
             No study tracks declared yet. Be the first to check in below!
           </p>
         ) : (
@@ -128,12 +124,12 @@ export function DetailScreen({ room, isDesktop }: DetailScreenProps) {
                     <span className="text-foreground tracking-wide font-semibold">{subject}</span>
                     <span className="text-muted-foreground">{count} {count === 1 ? 'student' : 'students'} ({percentage}%)</span>
                   </div>
-                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                  <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${percentage}%` }}
                       transition={{ duration: 0.5, ease: 'easeOut' }}
-                      className="bg-blue-600 h-full rounded-full"
+                      className="bg-primary h-full rounded-full"
                     />
                   </div>
                 </div>
@@ -143,8 +139,7 @@ export function DetailScreen({ room, isDesktop }: DetailScreenProps) {
         )}
       </div>
 
-      {/* 3. Crowdsourcing Interactive Action Panel */}
-      <div className="bg-white rounded-2xl border border-border p-5 shadow-sm">
+      <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
         {isCheckedIn ? (
           <div className="bg-emerald-50/60 border border-emerald-200 p-4 rounded-xl flex items-center gap-3 text-emerald-800 text-sm font-medium">
             <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
@@ -166,13 +161,13 @@ export function DetailScreen({ room, isDesktop }: DetailScreenProps) {
                   value={subjectInput}
                   onChange={(e) => setSubjectInput(e.target.value)}
                   placeholder="e.g., CSCI 135, MATH 150, BIO"
-                  className="flex-1 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 text-sm transition-colors"
+                  className="flex-1 px-3.5 py-2.5 bg-input-background border border-transparent rounded-xl focus:outline-none focus:border-border text-sm transition-colors"
                   disabled={isSubmitting}
                 />
                 <button
                   type="submit"
                   disabled={isSubmitting || !subjectInput.trim()}
-                  className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-xl transition-colors disabled:opacity-40 flex items-center gap-1.5 shrink-0 shadow-sm"
+                  className="px-4 py-2.5 bg-primary hover:opacity-90 text-primary-foreground font-medium text-sm rounded-xl transition-all disabled:opacity-40 flex items-center gap-1.5 shrink-0 shadow-sm"
                 >
                   <UserCheck className="w-4 h-4" />
                   Check In
