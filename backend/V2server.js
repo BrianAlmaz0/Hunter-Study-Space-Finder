@@ -81,7 +81,7 @@ app.get('/api/rooms/:roomId/occupancy', async function (req, res) {
 
     res.json({
       roomId: roomId,
-      totalStudents: activeCheckIns.length,
+      totalStudents: totalStudentsCount,
       subjectsStudied: subjectBreakdown // Returns format: { "CSCI": 4, "MATH": 2 }
     });
   } catch (error) {
