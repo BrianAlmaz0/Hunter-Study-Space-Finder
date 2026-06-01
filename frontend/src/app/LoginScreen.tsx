@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { GraduationCap, AlertCircle, CheckCircle } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { GraduationCap, AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { API } from './api';
 
@@ -7,6 +7,75 @@ type AuthStep = 'login' | 'signup' | 'verify';
 const ALLOWED_DOMAINS = ['login.cuny.edu', 'hunter.cuny.edu', 'myhunter.cuny.edu'];
 const isValidCunyEmail = (email: string) =>
   ALLOWED_DOMAINS.some(d => email.toLowerCase().trim().endsWith(`@${d}`));
+
+const inputClass =
+  'w-full px-4 py-3 bg-input-background border border-transparent rounded-xl focus:outline-none focus:border-border transition-colors text-base';
+
+function PasswordInput({
+  value, onChange, placeholder, show, onToggle, disabled,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  show: boolean;
+  onToggle: () => void;
+  disabled?: boolean;
+}) {
+  const inputRef    = useRef<HTMLInputElement>(null);
+  const savedCursor = useRef<{ start: number; end: number } | null>(null);
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
+    // Prevent focus from leaving the input, and save cursor before anything shifts.
+    e.preventDefault();
+    if (inputRef.current) {
+      savedCursor.current = {
+        start: inputRef.current.selectionStart ?? 0,
+        end:   inputRef.current.selectionEnd   ?? 0,
+      };
+    }
+  };
+
+  const handleClick = () => {
+    onToggle();
+    // rAF fires after React's synchronous DOM mutation (type attr change resets selection),
+    // but before the browser paints — restore cursor and focus here.
+    requestAnimationFrame(() => {
+      if (inputRef.current && savedCursor.current !== null) {
+        inputRef.current.focus();
+        inputRef.current.setSelectionRange(
+          savedCursor.current.start,
+          savedCursor.current.end,
+        );
+        savedCursor.current = null;
+      }
+    });
+  };
+
+  return (
+    <div className="relative">
+      <input
+        ref={inputRef}
+        type={show ? 'text' : 'password'}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        className={`${inputClass} pr-12`}
+        disabled={disabled}
+        required
+      />
+      <button
+        type="button"
+        onMouseDown={handleMouseDown}
+        onClick={handleClick}
+        disabled={disabled}
+        className="absolute inset-y-0 right-0 flex items-center pr-4 text-muted-foreground hover:text-foreground transition-colors"
+        tabIndex={-1}
+      >
+        {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+      </button>
+    </div>
+  );
+}
 
 interface LoginScreenProps {
   onLoginSuccess: (studentData: { name: string; email: string }, token: string) => void;
@@ -29,6 +98,11 @@ export function LoginScreen({ onLoginSuccess, isDesktop }: LoginScreenProps) {
 
   // Verify field
   const [code, setCode] = useState('');
+
+  // Password visibility toggles
+  const [showLoginPassword, setShowLoginPassword]     = useState(false);
+  const [showSignupPassword, setShowSignupPassword]   = useState(false);
+  const [showSignupConfirm, setShowSignupConfirm]     = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -135,9 +209,6 @@ export function LoginScreen({ onLoginSuccess, isDesktop }: LoginScreenProps) {
     }
   };
 
-  const inputClass =
-    'w-full px-4 py-3 bg-input-background border border-transparent rounded-xl focus:outline-none focus:border-border transition-colors text-base';
-
   const ErrorBanner = ({ msg }: { msg: string }) => (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -196,9 +267,10 @@ export function LoginScreen({ onLoginSuccess, isDesktop }: LoginScreenProps) {
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">Password</label>
-                <input
-                  type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)}
-                  placeholder="••••••••" className={inputClass} disabled={isLoading} required
+                <PasswordInput
+                  value={loginPassword} onChange={setLoginPassword}
+                  placeholder="••••••••" show={showLoginPassword}
+                  onToggle={() => setShowLoginPassword(v => !v)} disabled={isLoading}
                 />
               </div>
               {error && <ErrorBanner msg={error} />}
@@ -226,7 +298,7 @@ export function LoginScreen({ onLoginSuccess, isDesktop }: LoginScreenProps) {
                 <label className="block text-sm font-medium text-foreground mb-1.5">Full Name</label>
                 <input
                   type="text" value={signupName} onChange={e => setSignupName(e.target.value)}
-                  placeholder="Brian Almazo" className={inputClass} disabled={isLoading} required
+                  placeholder="John Doe" className={inputClass} disabled={isLoading} required
                 />
               </div>
               <div>
@@ -241,16 +313,18 @@ export function LoginScreen({ onLoginSuccess, isDesktop }: LoginScreenProps) {
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">Password</label>
-                <input
-                  type="password" value={signupPassword} onChange={e => setSignupPassword(e.target.value)}
-                  placeholder="At least 8 characters" className={inputClass} disabled={isLoading} required
+                <PasswordInput
+                  value={signupPassword} onChange={setSignupPassword}
+                  placeholder="At least 8 characters" show={showSignupPassword}
+                  onToggle={() => setShowSignupPassword(v => !v)} disabled={isLoading}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">Confirm Password</label>
-                <input
-                  type="password" value={signupConfirm} onChange={e => setSignupConfirm(e.target.value)}
-                  placeholder="Re-enter password" className={inputClass} disabled={isLoading} required
+                <PasswordInput
+                  value={signupConfirm} onChange={setSignupConfirm}
+                  placeholder="Re-enter password" show={showSignupConfirm}
+                  onToggle={() => setShowSignupConfirm(v => !v)} disabled={isLoading}
                 />
               </div>
               {error && <ErrorBanner msg={error} />}
