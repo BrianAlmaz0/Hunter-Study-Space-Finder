@@ -25,6 +25,13 @@ interface UpcomingClass {
   isCurrent: boolean;
 }
 
+interface OccupancyReport {
+  room: string;
+  building: string | null;
+  expiresAt: string;
+  createdAt: string;
+}
+
 interface DetailScreenProps {
   room: Room;
   isFavorite: boolean;
@@ -34,7 +41,7 @@ interface DetailScreenProps {
   searchTime: string;
   searchDate?: string;
   isAuthenticated: boolean;
-  onOccupancyChange?: () => void;
+  onOccupancyChange?: (occupancy: OccupancyReport | null) => void;
   activeRoom?: string | null;
 }
 
@@ -101,7 +108,12 @@ export function DetailScreen({
         // Only bump the count if this is a brand-new report (not an update)
         if (!myReport) setOccupancyCount(c => c + 1);
         setMyReport({ expiresAt: data.expiresAt });
-        onOccupancyChange?.();
+        onOccupancyChange?.({
+          room: room.id,
+          building: room.building,
+          expiresAt: data.expiresAt,
+          createdAt: new Date().toISOString(),
+        });
       }
     } catch { /* ignore network errors */ }
     setSubmitting(false);
@@ -119,7 +131,7 @@ export function DetailScreen({
       if (res.ok) {
         setMyReport(null);
         setOccupancyCount(c => Math.max(0, c - 1));
-        onOccupancyChange?.();
+        onOccupancyChange?.(null);
       }
     } catch { /* ignore */ }
     setSubmitting(false);

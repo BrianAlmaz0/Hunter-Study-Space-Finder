@@ -184,6 +184,14 @@ export default function App() {
     } catch {}
   };
 
+  const handleOccupancyChange = (occupancy: OccupancyReport | null) => {
+    setCurrentOccupancy(occupancy);
+    // Background refetch to sync room-level student counts
+    fetch(`${API}/api/rooms/all`).then(r => r.ok ? r.json() : null).then(data => {
+      if (data) setAllRooms(data);
+    }).catch(() => {});
+  };
+
   useEffect(() => {
     if (!user) { setCurrentOccupancy(null); return; }
     fetchCurrentOccupancy();
@@ -310,12 +318,12 @@ export default function App() {
       )}
       {currentScreen === 'results' && (
         <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <ResultsScreen rooms={searchResults} favorites={favorites} onRoomSelect={handleRoomSelect} isDesktop={isDesktop} />
+          <ResultsScreen rooms={searchResults} favorites={favorites} onRoomSelect={handleRoomSelect} isDesktop={isDesktop} activeRoom={currentOccupancy?.room ?? null} />
         </motion.div>
       )}
       {currentScreen === 'detail' && selectedRoom && (
         <motion.div key="detail" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <DetailScreen room={selectedRoom} isFavorite={favorites.includes(selectedRoom.id)} onToggleFavorite={() => toggleFavorite(selectedRoom.id)} isDesktop={isDesktop} searchDay={searchFilters.day} searchTime={searchFilters.time} searchDate={searchFilters.date} isAuthenticated={true} onOccupancyChange={fetchCurrentOccupancy} activeRoom={currentOccupancy?.room ?? null} />
+          <DetailScreen room={selectedRoom} isFavorite={favorites.includes(selectedRoom.id)} onToggleFavorite={() => toggleFavorite(selectedRoom.id)} isDesktop={isDesktop} searchDay={searchFilters.day} searchTime={searchFilters.time} searchDate={searchFilters.date} isAuthenticated={true} onOccupancyChange={handleOccupancyChange} activeRoom={currentOccupancy?.room ?? null} />
         </motion.div>
       )}
       {currentScreen === 'favorites' && (

@@ -18,6 +18,7 @@ interface ResultsScreenProps {
   favorites: string[];
   isDesktop: boolean;
   rooms?: Room[];
+  activeRoom?: string | null;
 }
 
 const mockRooms: Room[] = [
@@ -37,7 +38,7 @@ function formatAvailability(minutes: number | null): string {
   return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
 }
 
-export function ResultsScreen({ onRoomSelect, favorites, isDesktop, rooms = mockRooms }: ResultsScreenProps) {
+export function ResultsScreen({ onRoomSelect, favorites, isDesktop, rooms = mockRooms, activeRoom }: ResultsScreenProps) {
   return (
     <div className={`min-h-full ${isDesktop ? 'px-12 py-10' : 'px-6 py-6'}`}>
       <div className={isDesktop ? 'max-w-6xl mx-auto' : 'max-w-md mx-auto'}>
@@ -55,6 +56,7 @@ export function ResultsScreen({ onRoomSelect, favorites, isDesktop, rooms = mock
           {rooms.map((room, index) => {
             const studentOccupied = room.isStudentReportedOccupied ?? false;
             const occupancyCount  = room.studentOccupancyCount ?? 0;
+            const isMyRoom        = activeRoom === room.id;
 
             return (
               <motion.button
@@ -63,10 +65,12 @@ export function ResultsScreen({ onRoomSelect, favorites, isDesktop, rooms = mock
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
                 onClick={() => onRoomSelect(room)}
-                className={`w-full bg-white border rounded-2xl p-4 hover:shadow-sm transition-all text-left ${
-                  studentOccupied
-                    ? 'border-amber-300 hover:border-amber-400'
-                    : 'border-border hover:border-[#2563eb]/40'
+                className={`w-full border rounded-2xl p-4 hover:shadow-sm transition-all text-left ${
+                  isMyRoom
+                    ? 'bg-amber-50 border-amber-300 hover:border-amber-400'
+                    : studentOccupied
+                    ? 'bg-white border-amber-300 hover:border-amber-400'
+                    : 'bg-white border-border hover:border-[#2563eb]/40'
                 }`}
               >
                 <div className="flex items-start justify-between gap-4">
@@ -92,7 +96,13 @@ export function ResultsScreen({ onRoomSelect, favorites, isDesktop, rooms = mock
                     </div>
 
                     {/* Student-reported occupancy badge */}
-                    {studentOccupied && (
+                    {isMyRoom && (
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <Users className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                        <span className="text-xs text-amber-700 font-medium">You're studying here</span>
+                      </div>
+                    )}
+                    {!isMyRoom && studentOccupied && (
                       <div className="flex items-center gap-1.5 mt-1">
                         <Users className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
                         <span className="text-xs text-amber-700">
