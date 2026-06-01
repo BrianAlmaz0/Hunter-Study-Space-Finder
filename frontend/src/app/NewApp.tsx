@@ -399,8 +399,7 @@ export default function App() {
 
           <div className="p-4 border-t border-sidebar-border">
             <div className="text-xs text-muted-foreground mb-3">
-              <div className="mb-1">{searchResults.length} rooms available</div>
-              <div>Welcome, {user.name}</div>
+              Welcome, {user.name}
             </div>
             <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors">
               <LogOut className="w-4 h-4" /><span>Sign Out</span>
