@@ -5,7 +5,7 @@ interface Room {
   id: string;
   building: string;
   roomNumber: string;
-  floor: number;
+  floor: number | string;
   availableFor: number | null;
   nextClass: string | null;
   type: string;

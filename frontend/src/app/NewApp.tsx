@@ -23,7 +23,7 @@ interface Room {
   id: string;
   building: string;
   roomNumber: string;
-  floor: number;
+  floor: number | string;
   availableFor: number | null;
   nextClass: string | null;
   type: string;
@@ -67,6 +67,7 @@ export default function App() {
   const [searchResults, setSearchResults] = useState<Room[]>([]);
   const [allRooms, setAllRooms] = useState<Room[]>([]);
   const [buildings, setBuildings] = useState<string[]>([]);
+  const [buildingFloors, setBuildingFloors] = useState<Record<string, string[]>>({});
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
@@ -125,6 +126,47 @@ export default function App() {
     ]).then(([buildingList, roomList, favoritesList]) => {
       setBuildings(buildingList);
       setAllRooms(roomList);
+
+      // Per-building maximum floor — used to filter out implausible values that
+      // may have been stored by an older version of the floor-inference logic.
+      const BUILDING_MAX_FLOOR: Record<string, number> = {
+        'West Building':      19,
+        'East Building':      17,
+        'North Building':     17,
+        'Thomas Hunter Hall':  6,
+        'Baker Building':      6,
+        'Silberman':           8,
+        'Roosevelt House':     6,
+      };
+      const DEFAULT_MAX_FLOOR = 20;
+
+      // Build a per-building → sorted unique floors map from the room list.
+      // Special values 'C' (cellar) and 'B' (basement) are always kept.
+      // Numeric floors are validated against the building's known maximum.
+      const floorsMap: Record<string, string[]> = {};
+      for (const room of (roomList as Room[])) {
+        if (!room.building || room.floor == null) continue;
+        const f   = String(room.floor);
+        const max = BUILDING_MAX_FLOOR[room.building] ?? DEFAULT_MAX_FLOOR;
+        if (f !== 'C' && f !== 'B') {
+          const n = parseInt(f);
+          if (isNaN(n) || n < 1 || n > max) continue; // reject implausible floor
+        }
+        if (!floorsMap[room.building]) floorsMap[room.building] = [];
+        if (!floorsMap[room.building].includes(f)) floorsMap[room.building].push(f);
+      }
+      // Sort: 'C' and 'B' (below-grade) first, then numerically ascending.
+      for (const bldg of Object.keys(floorsMap)) {
+        floorsMap[bldg] = floorsMap[bldg].sort((a, b) => {
+          const subGrade = (v: string) => v === 'C' || v === 'B';
+          if (subGrade(a) && subGrade(b)) return a.localeCompare(b);
+          if (subGrade(a)) return -1;
+          if (subGrade(b)) return 1;
+          return parseInt(a) - parseInt(b);
+        });
+      }
+      setBuildingFloors(floorsMap);
+
       if (Array.isArray(favoritesList)) setFavorites(favoritesList);
     });
   }, [user]);
@@ -263,7 +305,7 @@ export default function App() {
     <AnimatePresence mode="wait">
       {currentScreen === 'home' && (
         <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <HomeScreen onSearch={handleSearchSubmit} isDesktop={isDesktop} buildings={buildings} isSearching={isSearching} searchError={searchError} availableNowCount={allRooms.length > 0 ? allRooms.filter(r => r.isAvailable && !r.isStudentReportedOccupied).length : undefined} totalRoomsCount={allRooms.length > 0 ? allRooms.length : undefined} />
+          <HomeScreen onSearch={handleSearchSubmit} isDesktop={isDesktop} buildings={buildings} buildingFloors={buildingFloors} isSearching={isSearching} searchError={searchError} availableNowCount={allRooms.length > 0 ? allRooms.filter(r => r.isAvailable && !r.isStudentReportedOccupied).length : undefined} totalRoomsCount={allRooms.length > 0 ? allRooms.length : undefined} />
         </motion.div>
       )}
       {currentScreen === 'results' && (

@@ -5,6 +5,7 @@ interface HomeScreenProps {
   onSearch: (filters: SearchFilters) => void;
   isDesktop: boolean;
   buildings?: string[];
+  buildingFloors?: Record<string, string[]>;
   isSearching?: boolean;
   searchError?: string | null;
   availableNowCount?: number;
@@ -34,6 +35,7 @@ export function HomeScreen({
   onSearch,
   isDesktop,
   buildings,
+  buildingFloors = {},
   isSearching = false,
   searchError = null,
   availableNowCount,
@@ -43,6 +45,15 @@ export function HomeScreen({
   const [building, setBuilding] = useState('');
   const [floor, setFloor] = useState('');
   const [timeFilter, setTimeFilter] = useState('now');
+
+  // Reset floor whenever building changes so stale selections don't carry over.
+  const handleBuildingChange = (newBuilding: string) => {
+    setBuilding(newBuilding);
+    setFloor('');
+  };
+
+  // Floors available for the currently selected building (already sorted: C first, then numeric).
+  const availableFloors: string[] = building ? (buildingFloors[building] ?? []) : [];
   const [selectedDay, setSelectedDay] = useState(
     new Date().toLocaleString('en-US', { weekday: 'long' })
   );
@@ -96,7 +107,7 @@ export function HomeScreen({
             Find available classrooms to study between classes
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            Summer 2026 schedule · Room list from Spring &amp; Summer 2026
+            Accurate for Summer 2026 semester.
           </p>
         </div>
 
@@ -111,34 +122,38 @@ export function HomeScreen({
             </label>
             <select
               value={building}
-              onChange={(e) => setBuilding(e.target.value)}
+              onChange={(e) => handleBuildingChange(e.target.value)}
               className="w-full px-4 py-3.5 bg-white border border-border rounded-xl appearance-none cursor-pointer hover:border-[#2563eb]/50 transition-colors"
             >
-              <option value="">Select a building</option>
+              <option value="">All Buildings</option>
               {buildingList.map((b) => (
                 <option key={b} value={b}>{b}</option>
               ))}
             </select>
           </div>
 
-          {/* Floor */}
-          <div>
-            <label className="flex items-center gap-2 mb-3 text-sm text-foreground">
-              <Grid3x3 className="w-4 h-4 text-muted-foreground" />
-              Floor
-            </label>
-            <select
-              value={floor}
-              onChange={(e) => setFloor(e.target.value)}
-              className="w-full px-4 py-3.5 bg-white border border-border rounded-xl appearance-none cursor-pointer hover:border-[#2563eb]/50 transition-colors"
-            >
-              <option value="">Any Floor</option>
-              <option value="C">Floor C</option>
-              {Array.from({ length: 15 }, (_, i) => i + 1).map(n => (
-                <option key={n} value={String(n)}>Floor {n}</option>
-              ))}
-            </select>
-          </div>
+          {/* Floor — only shown when a specific building is selected */}
+          {building && availableFloors.length > 0 && (
+            <div>
+              <label className="flex items-center gap-2 mb-3 text-sm text-foreground">
+                <Grid3x3 className="w-4 h-4 text-muted-foreground" />
+                Floor
+              </label>
+              <select
+                value={floor}
+                onChange={(e) => setFloor(e.target.value)}
+                className="w-full px-4 py-3.5 bg-white border border-border rounded-xl appearance-none cursor-pointer hover:border-[#2563eb]/50 transition-colors"
+              >
+                <option value="">All Floors</option>
+                {availableFloors.map(f => (
+                  <option key={f} value={f}>Floor {f}</option>
+                ))}
+              </select>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Some floors may not appear because they primarily contain faculty offices or non-classroom facilities.
+              </p>
+            </div>
+          )}
 
           {/* Time */}
           <div>

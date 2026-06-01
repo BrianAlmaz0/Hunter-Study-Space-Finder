@@ -40,14 +40,17 @@ function getRoomNumber(room) {
   return parts[parts.length - 1];
 }
 
-function getFloor(roomNumber) {
+// inferFloor(roomNumber, building) — must stay in sync with server.js version.
+function inferFloor(roomNumber, building) {
   const trimmed = roomNumber.trim();
   if (/^C/i.test(trimmed)) return 'C';
+  if (building === 'West Building' && (/^WB\d/i.test(trimmed) || /^B\d/i.test(trimmed))) return 'B';
+  if (building === 'East Building' && /^B[12]$/i.test(trimmed)) return 'B';
   const m = trimmed.match(/\d+/);
   if (!m) return 1;
   const digits = m[0];
-  if (digits.length <= 2) return parseInt(digits[0]) || 1;
-  return parseInt(digits.slice(0, -2)) || 1;
+  if (digits.length <= 3) return parseInt(digits[0]) || 1;
+  return parseInt(digits.slice(0, 2)) || 1;
 }
 
 // ── Entry point ───────────────────────────────────────────────────────────────
@@ -154,6 +157,9 @@ async function scrapeInventory() {
   }
 }
 
+// Matches multiple building name occurrences — used to reject concatenated/corrupt entries.
+const BUILDING_NAME_RE = /\b(North|West|East)\s+Bldg\b|ThomHunter|Silberman|Baker|Roosevelt/gi;
+
 // ── HTML parser (rooms only) ──────────────────────────────────────────────────
 
 function parseRooms(html) {
@@ -172,6 +178,8 @@ function parseRooms(html) {
     const room = first('Room');
     if (!room || /\bTBA\b/i.test(room)) return;
     if (/^online/i.test(room.trim())) return;
+    // Reject corrupt entries where two room strings were concatenated by the scraper
+    if ((room.match(BUILDING_NAME_RE) || []).length > 1) return;
 
     const mode = first('Instruction Mode') || '';
     if (/^online\s+(synchronous|asynchronous|mix)/i.test(mode)) return;
@@ -180,7 +188,7 @@ function parseRooms(html) {
     if (!building) return;
 
     const roomNumber = getRoomNumber(room);
-    const floor      = getFloor(roomNumber);
+    const floor      = inferFloor(roomNumber, building);
 
     rooms.push({
       room,
