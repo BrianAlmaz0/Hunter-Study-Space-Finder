@@ -22,9 +22,10 @@ async function seed() {
       readFileSync(path.join(__dirname, 'data', 'hunter-all-subjects-schedule.json'), 'utf8')
     );
 
+    console.log('Clearing old schedule documents only from schedules collection...');
     await db.collection('schedules').deleteMany({});
     const result = await db.collection('schedules').insertMany(raw);
-    console.log(`Seeded ${result.insertedCount} schedule records into MongoDB`);
+    console.log(`Inserted ${result.insertedCount} summer schedule records.`);
   } finally {
     await client.close();
   }

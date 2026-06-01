@@ -16,6 +16,7 @@ interface SearchFilters {
   floor?: string;
   day: string;
   time: string;
+  date: string;
 }
 
 interface Room {
@@ -69,8 +70,9 @@ export default function App() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
-    day: new Date().toLocaleString('en-US', { weekday: 'long' }),
-    time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
+    day:  new Date().toLocaleString('en-US', { weekday: 'long' }),
+    time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+    date: new Date().toISOString().split('T')[0],
   });
   const [currentOccupancy, setCurrentOccupancy] = useState<OccupancyReport | null>(null);
 
@@ -202,7 +204,7 @@ export default function App() {
     setSearchFilters(filters);
 
     try {
-      const params = new URLSearchParams({ day: filters.day, time: filters.time });
+      const params = new URLSearchParams({ day: filters.day, time: filters.time, date: filters.date });
       if (filters.building) params.append('building', filters.building);
       if (filters.floor) params.append('floor', filters.floor);
 
@@ -271,7 +273,7 @@ export default function App() {
       )}
       {currentScreen === 'detail' && selectedRoom && (
         <motion.div key="detail" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <DetailScreen room={selectedRoom} isFavorite={favorites.includes(selectedRoom.id)} onToggleFavorite={() => toggleFavorite(selectedRoom.id)} isDesktop={isDesktop} searchDay={searchFilters.day} searchTime={searchFilters.time} isAuthenticated={true} onOccupancyChange={fetchCurrentOccupancy} activeRoom={currentOccupancy?.room ?? null} />
+          <DetailScreen room={selectedRoom} isFavorite={favorites.includes(selectedRoom.id)} onToggleFavorite={() => toggleFavorite(selectedRoom.id)} isDesktop={isDesktop} searchDay={searchFilters.day} searchTime={searchFilters.time} searchDate={searchFilters.date} isAuthenticated={true} onOccupancyChange={fetchCurrentOccupancy} activeRoom={currentOccupancy?.room ?? null} />
         </motion.div>
       )}
       {currentScreen === 'favorites' && (

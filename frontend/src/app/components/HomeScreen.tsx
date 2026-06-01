@@ -17,6 +17,7 @@ interface SearchFilters {
   floor?: string;
   day: string;
   time: string;
+  date: string;
 }
 
 const DEFAULT_BUILDINGS = [
@@ -52,14 +53,27 @@ export function HomeScreen({
   const buildingList = buildings && buildings.length > 0 ? buildings : DEFAULT_BUILDINGS;
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
+  // Returns YYYY-MM-DD for the next (or current) occurrence of a day name from today.
+  const nextOccurrenceOf = (dayName: string): string => {
+    const order = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const target = order.indexOf(dayName);
+    const now    = new Date();
+    let ahead    = target - now.getDay();
+    if (ahead < 0) ahead += 7;
+    const d = new Date(now);
+    d.setDate(now.getDate() + ahead);
+    return d.toISOString().split('T')[0];
+  };
+
+  const todayStr = (): string => new Date().toISOString().split('T')[0];
+
   const handleSearch = () => {
+    const isNow = timeFilter === 'now';
+    const now   = new Date();
     const filters: SearchFilters = {
-      day: timeFilter === 'now'
-        ? new Date().toLocaleString('en-US', { weekday: 'long' })
-        : selectedDay,
-      time: timeFilter === 'now'
-        ? new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
-        : selectedTime,
+      day:  isNow ? now.toLocaleString('en-US', { weekday: 'long' }) : selectedDay,
+      time: isNow ? now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : selectedTime,
+      date: isNow ? todayStr() : nextOccurrenceOf(selectedDay),
     };
     if (building) filters.building = building;
     if (floor) filters.floor = floor;
@@ -82,7 +96,7 @@ export function HomeScreen({
             Find available classrooms to study between classes
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            Accurate for Spring 2026 semester (January 26 – May 26)
+            Summer 2026 schedule · Room list from Spring &amp; Summer 2026
           </p>
         </div>
 
@@ -220,7 +234,7 @@ export function HomeScreen({
                 {statTotalRooms}
               </div>
               <div className={`${isDesktop ? 'text-sm' : 'text-xs'} text-muted-foreground`}>
-                Total Rooms
+                Tracked Rooms
               </div>
             </div>
           </div>

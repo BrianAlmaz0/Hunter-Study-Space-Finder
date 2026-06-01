@@ -32,6 +32,7 @@ interface DetailScreenProps {
   isDesktop: boolean;
   searchDay: string;
   searchTime: string;
+  searchDate?: string;
   isAuthenticated: boolean;
   onOccupancyChange?: () => void;
   activeRoom?: string | null;
@@ -52,7 +53,7 @@ function formatExpiry(iso: string): string {
 }
 
 export function DetailScreen({
-  room, isFavorite, onToggleFavorite, isDesktop, searchDay, searchTime, isAuthenticated, onOccupancyChange, activeRoom,
+  room, isFavorite, onToggleFavorite, isDesktop, searchDay, searchTime, searchDate, isAuthenticated, onOccupancyChange, activeRoom,
 }: DetailScreenProps) {
   const [upcomingClasses, setUpcomingClasses] = useState<UpcomingClass[]>([]);
   const [loadingSchedule, setLoadingSchedule] = useState(true);
@@ -64,12 +65,13 @@ export function DetailScreen({
 
   // Fetch schedule
   useEffect(() => {
-    const params = new URLSearchParams({ room: room.id, day: searchDay, time: searchTime });
+    const date   = searchDate || new Date().toISOString().split('T')[0];
+    const params = new URLSearchParams({ room: room.id, day: searchDay, time: searchTime, date });
     fetch(`${API}/api/rooms/schedule?${params}`)
       .then(r => r.json())
       .then(data => { setUpcomingClasses(data); setLoadingSchedule(false); })
       .catch(() => setLoadingSchedule(false));
-  }, [room.id, searchDay, searchTime]);
+  }, [room.id, searchDay, searchTime, searchDate]);
 
   // Fetch live occupancy (+ check if this user already has a report)
   useEffect(() => {

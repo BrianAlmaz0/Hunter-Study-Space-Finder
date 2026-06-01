@@ -1,0 +1,1484 @@
+[
+  {
+    "room": "West Bldg W503",
+    "building": "West Building",
+    "floor": 5,
+    "normalizedRoomName": "west-bldg-w503"
+  },
+  {
+    "room": "North Bldg C002",
+    "building": "North Building",
+    "floor": "C",
+    "normalizedRoomName": "north-bldg-c002"
+  },
+  {
+    "room": "West Bldg W205",
+    "building": "West Building",
+    "floor": 2,
+    "normalizedRoomName": "west-bldg-w205"
+  },
+  {
+    "room": "West Bldg W113",
+    "building": "West Building",
+    "floor": 1,
+    "normalizedRoomName": "west-bldg-w113"
+  },
+  {
+    "room": "North Bldg 531",
+    "building": "North Building",
+    "floor": 5,
+    "normalizedRoomName": "north-bldg-531"
+  },
+  {
+    "room": "West Bldg W208",
+    "building": "West Building",
+    "floor": 2,
+    "normalizedRoomName": "west-bldg-w208"
+  },
+  {
+    "room": "West Bldg W424",
+    "building": "West Building",
+    "floor": 4,
+    "normalizedRoomName": "west-bldg-w424"
+  },
+  {
+    "room": "West Bldg W214",
+    "building": "West Building",
+    "floor": 2,
+    "normalizedRoomName": "west-bldg-w214"
+  },
+  {
+    "room": "East Bldg E706",
+    "building": "East Building",
+    "floor": 7,
+    "normalizedRoomName": "east-bldg-e706"
+  },
+  {
+    "room": "West Bldg W505",
+    "building": "West Building",
+    "floor": 5,
+    "normalizedRoomName": "west-bldg-w505"
+  },
+  {
+    "room": "West Bldg W215",
+    "building": "West Building",
+    "floor": 2,
+    "normalizedRoomName": "west-bldg-w215"
+  },
+  {
+    "room": "North Bldg 502",
+    "building": "North Building",
+    "floor": 5,
+    "normalizedRoomName": "north-bldg-502"
+  },
+  {
+    "room": "West Bldg W706",
+    "building": "West Building",
+    "floor": 7,
+    "normalizedRoomName": "west-bldg-w706"
+  },
+  {
+    "room": "North Bldg C100",
+    "building": "North Building",
+    "floor": "C",
+    "normalizedRoomName": "north-bldg-c100"
+  },
+  {
+    "room": "West Bldg W204",
+    "building": "West Building",
+    "floor": 2,
+    "normalizedRoomName": "west-bldg-w204"
+  },
+  {
+    "room": "Baker BTB240",
+    "building": "Baker Building",
+    "floor": 2,
+    "normalizedRoomName": "baker-btb240"
+  },
+  {
+    "room": "North Bldg 717",
+    "building": "North Building",
+    "floor": 7,
+    "normalizedRoomName": "north-bldg-717"
+  },
+  {
+    "room": "North Bldg 710",
+    "building": "North Building",
+    "floor": 7,
+    "normalizedRoomName": "north-bldg-710"
+  },
+  {
+    "room": "North Bldg 510",
+    "building": "North Building",
+    "floor": 5,
+    "normalizedRoomName": "north-bldg-510"
+  },
+  {
+    "room": "North Bldg 1036",
+    "building": "North Building",
+    "floor": 10,
+    "normalizedRoomName": "north-bldg-1036"
+  },
+  {
+    "room": "North Bldg C102",
+    "building": "North Building",
+    "floor": "C",
+    "normalizedRoomName": "north-bldg-c102"
+  },
+  {
+    "room": "West Bldg W411",
+    "building": "West Building",
+    "floor": 4,
+    "normalizedRoomName": "west-bldg-w411"
+  },
+  {
+    "room": "West Bldg W415",
+    "building": "West Building",
+    "floor": 4,
+    "normalizedRoomName": "west-bldg-w415"
+  },
+  {
+    "room": "West Bldg W207",
+    "building": "West Building",
+    "floor": 2,
+    "normalizedRoomName": "west-bldg-w207"
+  },
+  {
+    "room": "North Bldg C111",
+    "building": "North Building",
+    "floor": "C",
+    "normalizedRoomName": "north-bldg-c111"
+  },
+  {
+    "room": "ThomHunter 412",
+    "building": "Thomas Hunter Hall",
+    "floor": 4,
+    "normalizedRoomName": "thomhunter-412"
+  },
+  {
+    "room": "North Bldg C004",
+    "building": "North Building",
+    "floor": "C",
+    "normalizedRoomName": "north-bldg-c004"
+  },
+  {
+    "room": "North Bldg 1600",
+    "building": "North Building",
+    "floor": 16,
+    "normalizedRoomName": "north-bldg-1600"
+  },
+  {
+    "room": "North Bldg 11083",
+    "building": "North Building",
+    "floor": 110,
+    "normalizedRoomName": "north-bldg-11083"
+  },
+  {
+    "room": "North Bldg 11072",
+    "building": "North Building",
+    "floor": 110,
+    "normalizedRoomName": "north-bldg-11072"
+  },
+  {
+    "room": "North Bldg 11003",
+    "building": "North Building",
+    "floor": 110,
+    "normalizedRoomName": "north-bldg-11003"
+  },
+  {
+    "room": "North Bldg 11005",
+    "building": "North Building",
+    "floor": 110,
+    "normalizedRoomName": "north-bldg-11005"
+  },
+  {
+    "room": "North Bldg 1501",
+    "building": "North Building",
+    "floor": 15,
+    "normalizedRoomName": "north-bldg-1501"
+  },
+  {
+    "room": "East Bldg E512",
+    "building": "East Building",
+    "floor": 5,
+    "normalizedRoomName": "east-bldg-e512"
+  },
+  {
+    "room": "North Bldg 1502",
+    "building": "North Building",
+    "floor": 15,
+    "normalizedRoomName": "north-bldg-1502"
+  },
+  {
+    "room": "North Bldg 1503",
+    "building": "North Building",
+    "floor": 15,
+    "normalizedRoomName": "north-bldg-1503"
+  },
+  {
+    "room": "North Bldg 11106",
+    "building": "North Building",
+    "floor": 111,
+    "normalizedRoomName": "north-bldg-11106"
+  },
+  {
+    "room": "North Bldg 1603North Bldg 1603",
+    "building": "North Building",
+    "floor": 16,
+    "normalizedRoomName": "north-bldg-1603north-bldg-1603"
+  },
+  {
+    "room": "North Bldg 544",
+    "building": "North Building",
+    "floor": 5,
+    "normalizedRoomName": "north-bldg-544"
+  },
+  {
+    "room": "North Bldg 470D",
+    "building": "North Building",
+    "floor": 4,
+    "normalizedRoomName": "north-bldg-470d"
+  },
+  {
+    "room": "West Bldg W309",
+    "building": "West Building",
+    "floor": 3,
+    "normalizedRoomName": "west-bldg-w309"
+  },
+  {
+    "room": "North Bldg 544North Bldg 544",
+    "building": "North Building",
+    "floor": 5,
+    "normalizedRoomName": "north-bldg-544north-bldg-544"
+  },
+  {
+    "room": "West Bldg W408",
+    "building": "West Building",
+    "floor": 4,
+    "normalizedRoomName": "west-bldg-w408"
+  },
+  {
+    "room": "West Bldg W224",
+    "building": "West Building",
+    "floor": 2,
+    "normalizedRoomName": "west-bldg-w224"
+  },
+  {
+    "room": "West Bldg W1729",
+    "building": "West Building",
+    "floor": 17,
+    "normalizedRoomName": "west-bldg-w1729"
+  },
+  {
+    "room": "West Bldg W522North Bldg C115",
+    "building": "West Building",
+    "floor": "C",
+    "normalizedRoomName": "west-bldg-w522north-bldg-c115"
+  },
+  {
+    "room": "North Bldg 815",
+    "building": "North Building",
+    "floor": 8,
+    "normalizedRoomName": "north-bldg-815"
+  },
+  {
+    "room": "North Bldg 937",
+    "building": "North Building",
+    "floor": 9,
+    "normalizedRoomName": "north-bldg-937"
+  },
+  {
+    "room": "West Bldg W615West Bldg W615",
+    "building": "West Building",
+    "floor": 6,
+    "normalizedRoomName": "west-bldg-w615west-bldg-w615"
+  },
+  {
+    "room": "North Bldg C109",
+    "building": "North Building",
+    "floor": "C",
+    "normalizedRoomName": "north-bldg-c109"
+  },
+  {
+    "room": "North Bldg 918B",
+    "building": "North Building",
+    "floor": 9,
+    "normalizedRoomName": "north-bldg-918b"
+  },
+  {
+    "room": "North Bldg 926C",
+    "building": "North Building",
+    "floor": 9,
+    "normalizedRoomName": "north-bldg-926c"
+  },
+  {
+    "room": "North Bldg 926CNorth Bldg 926C",
+    "building": "North Building",
+    "floor": 9,
+    "normalizedRoomName": "north-bldg-926cnorth-bldg-926c"
+  },
+  {
+    "room": "North Bldg C106",
+    "building": "North Building",
+    "floor": "C",
+    "normalizedRoomName": "north-bldg-c106"
+  },
+  {
+    "room": "West Bldg W603West Bldg W603West Bldg W603West Bldg W603",
+    "building": "West Building",
+    "floor": 6,
+    "normalizedRoomName": "west-bldg-w603west-bldg-w603west-bldg-w603west-bldg-w603"
+  },
+  {
+    "room": "West Bldg W714",
+    "building": "West Building",
+    "floor": 7,
+    "normalizedRoomName": "west-bldg-w714"
+  },
+  {
+    "room": "North Bldg 118",
+    "building": "North Building",
+    "floor": 1,
+    "normalizedRoomName": "north-bldg-118"
+  },
+  {
+    "room": "North Bldg 1318",
+    "building": "North Building",
+    "floor": 13,
+    "normalizedRoomName": "north-bldg-1318"
+  },
+  {
+    "room": "North Bldg 118North Bldg 118",
+    "building": "North Building",
+    "floor": 1,
+    "normalizedRoomName": "north-bldg-118north-bldg-118"
+  },
+  {
+    "room": "North Bldg 1404B",
+    "building": "North Building",
+    "floor": 14,
+    "normalizedRoomName": "north-bldg-1404b"
+  },
+  {
+    "room": "North Bldg 1527",
+    "building": "North Building",
+    "floor": 15,
+    "normalizedRoomName": "north-bldg-1527"
+  },
+  {
+    "room": "North Bldg 1412S",
+    "building": "North Building",
+    "floor": 14,
+    "normalizedRoomName": "north-bldg-1412s"
+  },
+  {
+    "room": "West Bldg W511",
+    "building": "West Building",
+    "floor": 5,
+    "normalizedRoomName": "west-bldg-w511"
+  },
+  {
+    "room": "North Bldg 1001A",
+    "building": "North Building",
+    "floor": 10,
+    "normalizedRoomName": "north-bldg-1001a"
+  },
+  {
+    "room": "North Bldg 1413ANorth Bldg 1413A",
+    "building": "North Building",
+    "floor": 14,
+    "normalizedRoomName": "north-bldg-1413anorth-bldg-1413a"
+  },
+  {
+    "room": "West Bldg W509A",
+    "building": "West Building",
+    "floor": 5,
+    "normalizedRoomName": "west-bldg-w509a"
+  },
+  {
+    "room": "West Bldg W611",
+    "building": "West Building",
+    "floor": 6,
+    "normalizedRoomName": "west-bldg-w611"
+  },
+  {
+    "room": "West Bldg W1143",
+    "building": "West Building",
+    "floor": 11,
+    "normalizedRoomName": "west-bldg-w1143"
+  },
+  {
+    "room": "East Bldg EB121",
+    "building": "East Building",
+    "floor": 1,
+    "normalizedRoomName": "east-bldg-eb121"
+  },
+  {
+    "room": "North Bldg C113",
+    "building": "North Building",
+    "floor": "C",
+    "normalizedRoomName": "north-bldg-c113"
+  },
+  {
+    "room": "West Bldg W506",
+    "building": "West Building",
+    "floor": 5,
+    "normalizedRoomName": "west-bldg-w506"
+  },
+  {
+    "room": "North Bldg C112",
+    "building": "North Building",
+    "floor": "C",
+    "normalizedRoomName": "north-bldg-c112"
+  },
+  {
+    "room": "North Bldg C106North Bldg C106",
+    "building": "North Building",
+    "floor": "C",
+    "normalizedRoomName": "north-bldg-c106north-bldg-c106"
+  },
+  {
+    "room": "North Bldg 1001C",
+    "building": "North Building",
+    "floor": 10,
+    "normalizedRoomName": "north-bldg-1001c"
+  },
+  {
+    "room": "West Bldg W615",
+    "building": "West Building",
+    "floor": 6,
+    "normalizedRoomName": "west-bldg-w615"
+  },
+  {
+    "room": "North Bldg 1001E",
+    "building": "North Building",
+    "floor": 10,
+    "normalizedRoomName": "north-bldg-1001e"
+  },
+  {
+    "room": "North Bldg 1001F",
+    "building": "North Building",
+    "floor": 10,
+    "normalizedRoomName": "north-bldg-1001f"
+  },
+  {
+    "room": "North Bldg 1001D",
+    "building": "North Building",
+    "floor": 10,
+    "normalizedRoomName": "north-bldg-1001d"
+  },
+  {
+    "room": "North Bldg 1000J",
+    "building": "North Building",
+    "floor": 10,
+    "normalizedRoomName": "north-bldg-1000j"
+  },
+  {
+    "room": "North Bldg 1001DNorth Bldg 1001D",
+    "building": "North Building",
+    "floor": 10,
+    "normalizedRoomName": "north-bldg-1001dnorth-bldg-1001d"
+  },
+  {
+    "room": "North Bldg 1000C",
+    "building": "North Building",
+    "floor": 10,
+    "normalizedRoomName": "north-bldg-1000c"
+  },
+  {
+    "room": "West Bldg W1133",
+    "building": "West Building",
+    "floor": 11,
+    "normalizedRoomName": "west-bldg-w1133"
+  },
+  {
+    "room": "East Bldg E1220",
+    "building": "East Building",
+    "floor": 12,
+    "normalizedRoomName": "east-bldg-e1220"
+  },
+  {
+    "room": "North Bldg 1516",
+    "building": "North Building",
+    "floor": 15,
+    "normalizedRoomName": "north-bldg-1516"
+  },
+  {
+    "room": "East Bldg E402",
+    "building": "East Building",
+    "floor": 4,
+    "normalizedRoomName": "east-bldg-e402"
+  },
+  {
+    "room": "East Bldg E1442",
+    "building": "East Building",
+    "floor": 14,
+    "normalizedRoomName": "east-bldg-e1442"
+  },
+  {
+    "room": "West Bldg W708",
+    "building": "West Building",
+    "floor": 7,
+    "normalizedRoomName": "west-bldg-w708"
+  },
+  {
+    "room": "West Bldg W707A",
+    "building": "West Building",
+    "floor": 7,
+    "normalizedRoomName": "west-bldg-w707a"
+  },
+  {
+    "room": "West Bldg W705",
+    "building": "West Building",
+    "floor": 7,
+    "normalizedRoomName": "west-bldg-w705"
+  },
+  {
+    "room": "East Bldg E1203",
+    "building": "East Building",
+    "floor": 12,
+    "normalizedRoomName": "east-bldg-e1203"
+  },
+  {
+    "room": "West Bldg W709",
+    "building": "West Building",
+    "floor": 7,
+    "normalizedRoomName": "west-bldg-w709"
+  },
+  {
+    "room": "West Bldg W704",
+    "building": "West Building",
+    "floor": 7,
+    "normalizedRoomName": "west-bldg-w704"
+  },
+  {
+    "room": "East Bldg E617",
+    "building": "East Building",
+    "floor": 6,
+    "normalizedRoomName": "east-bldg-e617"
+  },
+  {
+    "room": "North Bldg C101",
+    "building": "North Building",
+    "floor": "C",
+    "normalizedRoomName": "north-bldg-c101"
+  },
+  {
+    "room": "North Bldg C108",
+    "building": "North Building",
+    "floor": "C",
+    "normalizedRoomName": "north-bldg-c108"
+  },
+  {
+    "room": "East Bldg E1130",
+    "building": "East Building",
+    "floor": 11,
+    "normalizedRoomName": "east-bldg-e1130"
+  },
+  {
+    "room": "East Bldg E618A",
+    "building": "East Building",
+    "floor": 6,
+    "normalizedRoomName": "east-bldg-e618a"
+  },
+  {
+    "room": "West Bldg W938",
+    "building": "West Building",
+    "floor": 9,
+    "normalizedRoomName": "west-bldg-w938"
+  },
+  {
+    "room": "East Bldg E1431",
+    "building": "East Building",
+    "floor": 14,
+    "normalizedRoomName": "east-bldg-e1431"
+  },
+  {
+    "room": "East Bldg E511",
+    "building": "East Building",
+    "floor": 5,
+    "normalizedRoomName": "east-bldg-e511"
+  },
+  {
+    "room": "East Bldg E620A",
+    "building": "East Building",
+    "floor": 6,
+    "normalizedRoomName": "east-bldg-e620a"
+  },
+  {
+    "room": "West Bldg W1111",
+    "building": "West Building",
+    "floor": 11,
+    "normalizedRoomName": "west-bldg-w1111"
+  },
+  {
+    "room": "ThomHunter 609",
+    "building": "Thomas Hunter Hall",
+    "floor": 6,
+    "normalizedRoomName": "thomhunter-609"
+  },
+  {
+    "room": "ThomHunter 520",
+    "building": "Thomas Hunter Hall",
+    "floor": 5,
+    "normalizedRoomName": "thomhunter-520"
+  },
+  {
+    "room": "North Bldg 132",
+    "building": "North Building",
+    "floor": 1,
+    "normalizedRoomName": "north-bldg-132"
+  },
+  {
+    "room": "North Bldg 132North Bldg 132",
+    "building": "North Building",
+    "floor": 1,
+    "normalizedRoomName": "north-bldg-132north-bldg-132"
+  },
+  {
+    "room": "West Bldg W405",
+    "building": "West Building",
+    "floor": 4,
+    "normalizedRoomName": "west-bldg-w405"
+  },
+  {
+    "room": "West Bldg W1537",
+    "building": "West Building",
+    "floor": 15,
+    "normalizedRoomName": "west-bldg-w1537"
+  },
+  {
+    "room": "West Bldg W1032",
+    "building": "West Building",
+    "floor": 10,
+    "normalizedRoomName": "west-bldg-w1032"
+  },
+  {
+    "room": "West Bldg W1142",
+    "building": "West Building",
+    "floor": 11,
+    "normalizedRoomName": "west-bldg-w1142"
+  },
+  {
+    "room": "West Bldg W509",
+    "building": "West Building",
+    "floor": 5,
+    "normalizedRoomName": "west-bldg-w509"
+  },
+  {
+    "room": "West Bldg W945",
+    "building": "West Building",
+    "floor": 9,
+    "normalizedRoomName": "west-bldg-w945"
+  },
+  {
+    "room": "East Bldg E1218",
+    "building": "East Building",
+    "floor": 12,
+    "normalizedRoomName": "east-bldg-e1218"
+  },
+  {
+    "room": "West Bldg W1146",
+    "building": "West Building",
+    "floor": 11,
+    "normalizedRoomName": "west-bldg-w1146"
+  },
+  {
+    "room": "West Bldg W1119",
+    "building": "West Building",
+    "floor": 11,
+    "normalizedRoomName": "west-bldg-w1119"
+  },
+  {
+    "room": "West Bldg W1134",
+    "building": "West Building",
+    "floor": 11,
+    "normalizedRoomName": "west-bldg-w1134"
+  },
+  {
+    "room": "West Bldg W1137",
+    "building": "West Building",
+    "floor": 11,
+    "normalizedRoomName": "west-bldg-w1137"
+  },
+  {
+    "room": "East Bldg E619A",
+    "building": "East Building",
+    "floor": 6,
+    "normalizedRoomName": "east-bldg-e619a"
+  },
+  {
+    "room": "West Bldg W1007",
+    "building": "West Building",
+    "floor": 10,
+    "normalizedRoomName": "west-bldg-w1007"
+  },
+  {
+    "room": "East Bldg E109",
+    "building": "East Building",
+    "floor": 1,
+    "normalizedRoomName": "east-bldg-e109"
+  },
+  {
+    "room": "West Bldg W409",
+    "building": "West Building",
+    "floor": 4,
+    "normalizedRoomName": "west-bldg-w409"
+  },
+  {
+    "room": "West Bldg W410",
+    "building": "West Building",
+    "floor": 4,
+    "normalizedRoomName": "west-bldg-w410"
+  },
+  {
+    "room": "West Bldg W1222",
+    "building": "West Building",
+    "floor": 12,
+    "normalizedRoomName": "west-bldg-w1222"
+  },
+  {
+    "room": "North Bldg C103",
+    "building": "North Building",
+    "floor": "C",
+    "normalizedRoomName": "north-bldg-c103"
+  },
+  {
+    "room": "West Bldg W407",
+    "building": "West Building",
+    "floor": 4,
+    "normalizedRoomName": "west-bldg-w407"
+  },
+  {
+    "room": "West Bldg W623",
+    "building": "West Building",
+    "floor": 6,
+    "normalizedRoomName": "west-bldg-w623"
+  },
+  {
+    "room": "West Bldg W1441",
+    "building": "West Building",
+    "floor": 14,
+    "normalizedRoomName": "west-bldg-w1441"
+  },
+  {
+    "room": "East Bldg E920",
+    "building": "East Building",
+    "floor": 9,
+    "normalizedRoomName": "east-bldg-e920"
+  },
+  {
+    "room": "West Bldg W508",
+    "building": "West Building",
+    "floor": 5,
+    "normalizedRoomName": "west-bldg-w508"
+  },
+  {
+    "room": "West Bldg W1242",
+    "building": "West Building",
+    "floor": 12,
+    "normalizedRoomName": "west-bldg-w1242"
+  },
+  {
+    "room": "West Bldg W412",
+    "building": "West Building",
+    "floor": 4,
+    "normalizedRoomName": "west-bldg-w412"
+  },
+  {
+    "room": "ThomHunter 109",
+    "building": "Thomas Hunter Hall",
+    "floor": 1,
+    "normalizedRoomName": "thomhunter-109"
+  },
+  {
+    "room": "North Bldg 504",
+    "building": "North Building",
+    "floor": 5,
+    "normalizedRoomName": "north-bldg-504"
+  },
+  {
+    "room": "North Bldg 507",
+    "building": "North Building",
+    "floor": 5,
+    "normalizedRoomName": "north-bldg-507"
+  },
+  {
+    "room": "North Bldg 503A",
+    "building": "North Building",
+    "floor": 5,
+    "normalizedRoomName": "north-bldg-503a"
+  },
+  {
+    "room": "North Bldg 543",
+    "building": "North Building",
+    "floor": 5,
+    "normalizedRoomName": "north-bldg-543"
+  },
+  {
+    "room": "North Bldg 436",
+    "building": "North Building",
+    "floor": 4,
+    "normalizedRoomName": "north-bldg-436"
+  },
+  {
+    "room": "West Bldg W509C",
+    "building": "West Building",
+    "floor": 5,
+    "normalizedRoomName": "west-bldg-w509c"
+  },
+  {
+    "room": "West Bldg W707C",
+    "building": "West Building",
+    "floor": 7,
+    "normalizedRoomName": "west-bldg-w707c"
+  },
+  {
+    "room": "West Bldg W413West Bldg W413",
+    "building": "West Building",
+    "floor": 4,
+    "normalizedRoomName": "west-bldg-w413west-bldg-w413"
+  },
+  {
+    "room": "West Bldg W1344",
+    "building": "West Building",
+    "floor": 13,
+    "normalizedRoomName": "west-bldg-w1344"
+  },
+  {
+    "room": "North Bldg 1022",
+    "building": "North Building",
+    "floor": 10,
+    "normalizedRoomName": "north-bldg-1022"
+  },
+  {
+    "room": "North Bldg 1022North Bldg 1022",
+    "building": "North Building",
+    "floor": 10,
+    "normalizedRoomName": "north-bldg-1022north-bldg-1022"
+  },
+  {
+    "room": "ThomHunter 405",
+    "building": "Thomas Hunter Hall",
+    "floor": 4,
+    "normalizedRoomName": "thomhunter-405"
+  },
+  {
+    "room": "North Bldg 1090B-2",
+    "building": "North Building",
+    "floor": 10,
+    "normalizedRoomName": "north-bldg-1090b-2"
+  },
+  {
+    "room": "North Bldg 1090B-1",
+    "building": "North Building",
+    "floor": 10,
+    "normalizedRoomName": "north-bldg-1090b-1"
+  },
+  {
+    "room": "North Bldg 1021",
+    "building": "North Building",
+    "floor": 10,
+    "normalizedRoomName": "north-bldg-1021"
+  },
+  {
+    "room": "North Bldg 1028",
+    "building": "North Building",
+    "floor": 10,
+    "normalizedRoomName": "north-bldg-1028"
+  },
+  {
+    "room": "West Bldg W509B",
+    "building": "West Building",
+    "floor": 5,
+    "normalizedRoomName": "west-bldg-w509b"
+  },
+  {
+    "room": "Baker BTB330",
+    "building": "Baker Building",
+    "floor": 3,
+    "normalizedRoomName": "baker-btb330"
+  },
+  {
+    "room": "West Bldg W1631",
+    "building": "West Building",
+    "floor": 16,
+    "normalizedRoomName": "west-bldg-w1631"
+  },
+  {
+    "room": "East Bldg EB118",
+    "building": "East Building",
+    "floor": 1,
+    "normalizedRoomName": "east-bldg-eb118"
+  },
+  {
+    "room": "Baker BTB230",
+    "building": "Baker Building",
+    "floor": 2,
+    "normalizedRoomName": "baker-btb230"
+  },
+  {
+    "room": "East Bldg E922",
+    "building": "East Building",
+    "floor": 9,
+    "normalizedRoomName": "east-bldg-e922"
+  },
+  {
+    "room": "Baker BTB330Baker BTB330",
+    "building": "Baker Building",
+    "floor": 3,
+    "normalizedRoomName": "baker-btb330baker-btb330"
+  },
+  {
+    "room": "West Bldg W522West Bldg W522",
+    "building": "West Building",
+    "floor": 5,
+    "normalizedRoomName": "west-bldg-w522west-bldg-w522"
+  },
+  {
+    "room": "West Bldg W1337",
+    "building": "West Building",
+    "floor": 13,
+    "normalizedRoomName": "west-bldg-w1337"
+  },
+  {
+    "room": "North Bldg 535",
+    "building": "North Building",
+    "floor": 5,
+    "normalizedRoomName": "north-bldg-535"
+  },
+  {
+    "room": "North Bldg 1602North Bldg 1602",
+    "building": "North Building",
+    "floor": 16,
+    "normalizedRoomName": "north-bldg-1602north-bldg-1602"
+  },
+  {
+    "room": "Roosevelt 304",
+    "building": "Roosevelt House",
+    "floor": 3,
+    "normalizedRoomName": "roosevelt-304"
+  },
+  {
+    "room": "Roosevelt 202",
+    "building": "Roosevelt House",
+    "floor": 2,
+    "normalizedRoomName": "roosevelt-202"
+  },
+  {
+    "room": "Roosevelt 103",
+    "building": "Roosevelt House",
+    "floor": 1,
+    "normalizedRoomName": "roosevelt-103"
+  },
+  {
+    "room": "North Bldg 321",
+    "building": "North Building",
+    "floor": 3,
+    "normalizedRoomName": "north-bldg-321"
+  },
+  {
+    "room": "West Bldg W1324",
+    "building": "West Building",
+    "floor": 13,
+    "normalizedRoomName": "west-bldg-w1324"
+  },
+  {
+    "room": "West Bldg W610",
+    "building": "West Building",
+    "floor": 6,
+    "normalizedRoomName": "west-bldg-w610"
+  },
+  {
+    "room": "East Bldg E921",
+    "building": "East Building",
+    "floor": 9,
+    "normalizedRoomName": "east-bldg-e921"
+  },
+  {
+    "room": "West Bldg W707B",
+    "building": "West Building",
+    "floor": 7,
+    "normalizedRoomName": "west-bldg-w707b"
+  },
+  {
+    "room": "East Bldg E602A",
+    "building": "East Building",
+    "floor": 6,
+    "normalizedRoomName": "east-bldg-e602a"
+  },
+  {
+    "room": "East Bldg E631A",
+    "building": "East Building",
+    "floor": 6,
+    "normalizedRoomName": "east-bldg-e631a"
+  },
+  {
+    "room": "North Bldg C107",
+    "building": "North Building",
+    "floor": "C",
+    "normalizedRoomName": "north-bldg-c107"
+  },
+  {
+    "room": "North Bldg 306",
+    "building": "North Building",
+    "floor": 3,
+    "normalizedRoomName": "north-bldg-306"
+  },
+  {
+    "room": "West Bldg W406",
+    "building": "West Building",
+    "floor": 4,
+    "normalizedRoomName": "west-bldg-w406"
+  },
+  {
+    "room": "ThomHunter 407",
+    "building": "Thomas Hunter Hall",
+    "floor": 4,
+    "normalizedRoomName": "thomhunter-407"
+  },
+  {
+    "room": "West Bldg W609",
+    "building": "West Building",
+    "floor": 6,
+    "normalizedRoomName": "west-bldg-w609"
+  },
+  {
+    "room": "West Bldg W404",
+    "building": "West Building",
+    "floor": 4,
+    "normalizedRoomName": "west-bldg-w404"
+  },
+  {
+    "room": "North Bldg 506",
+    "building": "North Building",
+    "floor": 5,
+    "normalizedRoomName": "north-bldg-506"
+  },
+  {
+    "room": "North Bldg 432",
+    "building": "North Building",
+    "floor": 4,
+    "normalizedRoomName": "north-bldg-432"
+  },
+  {
+    "room": "North Bldg 503",
+    "building": "North Building",
+    "floor": 5,
+    "normalizedRoomName": "north-bldg-503"
+  },
+  {
+    "room": "North Bldg 305",
+    "building": "North Building",
+    "floor": 3,
+    "normalizedRoomName": "north-bldg-305"
+  },
+  {
+    "room": "North Bldg 404",
+    "building": "North Building",
+    "floor": 4,
+    "normalizedRoomName": "north-bldg-404"
+  },
+  {
+    "room": "North Bldg 635A",
+    "building": "North Building",
+    "floor": 6,
+    "normalizedRoomName": "north-bldg-635a"
+  },
+  {
+    "room": "North Bldg 405",
+    "building": "North Building",
+    "floor": 4,
+    "normalizedRoomName": "north-bldg-405"
+  },
+  {
+    "room": "North Bldg 406",
+    "building": "North Building",
+    "floor": 4,
+    "normalizedRoomName": "north-bldg-406"
+  },
+  {
+    "room": "North Bldg 431",
+    "building": "North Building",
+    "floor": 4,
+    "normalizedRoomName": "north-bldg-431"
+  },
+  {
+    "room": "North Bldg 407",
+    "building": "North Building",
+    "floor": 4,
+    "normalizedRoomName": "north-bldg-407"
+  },
+  {
+    "room": "North Bldg 406North Bldg 406North Bldg 406North Bldg 406",
+    "building": "North Building",
+    "floor": 4,
+    "normalizedRoomName": "north-bldg-406north-bldg-406north-bldg-406north-bldg-406"
+  },
+  {
+    "room": "Silberman 218",
+    "building": "Silberman",
+    "floor": 2,
+    "normalizedRoomName": "silberman-218"
+  },
+  {
+    "room": "Silberman 217",
+    "building": "Silberman",
+    "floor": 2,
+    "normalizedRoomName": "silberman-217"
+  },
+  {
+    "room": "Silberman 214Silberman 214",
+    "building": "Silberman",
+    "floor": 2,
+    "normalizedRoomName": "silberman-214silberman-214"
+  },
+  {
+    "room": "Silberman 214",
+    "building": "Silberman",
+    "floor": 2,
+    "normalizedRoomName": "silberman-214"
+  },
+  {
+    "room": "Silberman 212",
+    "building": "Silberman",
+    "floor": 2,
+    "normalizedRoomName": "silberman-212"
+  },
+  {
+    "room": "Silberman 219",
+    "building": "Silberman",
+    "floor": 2,
+    "normalizedRoomName": "silberman-219"
+  },
+  {
+    "room": "North Bldg 320",
+    "building": "North Building",
+    "floor": 3,
+    "normalizedRoomName": "north-bldg-320"
+  },
+  {
+    "room": "North Bldg C110",
+    "building": "North Building",
+    "floor": "C",
+    "normalizedRoomName": "north-bldg-c110"
+  },
+  {
+    "room": "North Bldg 1239",
+    "building": "North Building",
+    "floor": 12,
+    "normalizedRoomName": "north-bldg-1239"
+  },
+  {
+    "room": "North Bldg 1311",
+    "building": "North Building",
+    "floor": 13,
+    "normalizedRoomName": "north-bldg-1311"
+  },
+  {
+    "room": "North Bldg 1230A",
+    "building": "North Building",
+    "floor": 12,
+    "normalizedRoomName": "north-bldg-1230a"
+  },
+  {
+    "room": "North Bldg C114",
+    "building": "North Building",
+    "floor": "C",
+    "normalizedRoomName": "north-bldg-c114"
+  },
+  {
+    "room": "West Bldg W714West Bldg W714West Bldg W714West Bldg W714",
+    "building": "West Building",
+    "floor": 7,
+    "normalizedRoomName": "west-bldg-w714west-bldg-w714west-bldg-w714west-bldg-w714"
+  },
+  {
+    "room": "Roosevelt 204",
+    "building": "Roosevelt House",
+    "floor": 2,
+    "normalizedRoomName": "roosevelt-204"
+  },
+  {
+    "room": "West Bldg W1731",
+    "building": "West Building",
+    "floor": 17,
+    "normalizedRoomName": "west-bldg-w1731"
+  },
+  {
+    "room": "North Bldg 118North Bldg 118North Bldg 118",
+    "building": "North Building",
+    "floor": 1,
+    "normalizedRoomName": "north-bldg-118north-bldg-118north-bldg-118"
+  },
+  {
+    "room": "West Bldg W619",
+    "building": "West Building",
+    "floor": 6,
+    "normalizedRoomName": "west-bldg-w619"
+  },
+  {
+    "room": "North Bldg 536",
+    "building": "North Building",
+    "floor": 5,
+    "normalizedRoomName": "north-bldg-536"
+  },
+  {
+    "room": "West Bldg W714West Bldg W714",
+    "building": "West Building",
+    "floor": 7,
+    "normalizedRoomName": "west-bldg-w714west-bldg-w714"
+  },
+  {
+    "room": "West Bldg W117West Bldg W117North Bldg 614North Bldg 614",
+    "building": "West Building",
+    "floor": 6,
+    "normalizedRoomName": "west-bldg-w117west-bldg-w117north-bldg-614north-bldg-614"
+  },
+  {
+    "room": "North Bldg 612",
+    "building": "North Building",
+    "floor": 6,
+    "normalizedRoomName": "north-bldg-612"
+  },
+  {
+    "room": "West Bldg W619West Bldg W619West Bldg W619West Bldg W619West Bldg W619West Bldg W619West Bldg W619West Bldg W619West Bldg W619West Bldg W619West Bldg W619West Bldg W619",
+    "building": "West Building",
+    "floor": 6,
+    "normalizedRoomName": "west-bldg-w619west-bldg-w619west-bldg-w619west-bldg-w619west-bldg-w619west-bldg-w619west-bldg-w619west-bldg-w619west-bldg-w619west-bldg-w619west-bldg-w619west-bldg-w619"
+  },
+  {
+    "room": "North Bldg C104",
+    "building": "North Building",
+    "floor": "C",
+    "normalizedRoomName": "north-bldg-c104"
+  },
+  {
+    "room": "North Bldg 612North Bldg 612North Bldg 612North Bldg 612",
+    "building": "North Building",
+    "floor": 6,
+    "normalizedRoomName": "north-bldg-612north-bldg-612north-bldg-612north-bldg-612"
+  },
+  {
+    "room": "Silberman 201",
+    "building": "Silberman",
+    "floor": 2,
+    "normalizedRoomName": "silberman-201"
+  },
+  {
+    "room": "Silberman 212Silberman 212",
+    "building": "Silberman",
+    "floor": 2,
+    "normalizedRoomName": "silberman-212silberman-212"
+  },
+  {
+    "room": "West Bldg W206",
+    "building": "West Building",
+    "floor": 2,
+    "normalizedRoomName": "west-bldg-w206"
+  },
+  {
+    "room": "West Bldg W604",
+    "building": "West Building",
+    "floor": 6,
+    "normalizedRoomName": "west-bldg-w604"
+  },
+  {
+    "room": "West Bldg W522",
+    "building": "West Building",
+    "floor": 5,
+    "normalizedRoomName": "west-bldg-w522"
+  },
+  {
+    "room": "West Bldg W1327",
+    "building": "West Building",
+    "floor": 13,
+    "normalizedRoomName": "west-bldg-w1327"
+  },
+  {
+    "room": "Silberman 327",
+    "building": "Silberman",
+    "floor": 3,
+    "normalizedRoomName": "silberman-327"
+  },
+  {
+    "room": "Silberman 330",
+    "building": "Silberman",
+    "floor": 3,
+    "normalizedRoomName": "silberman-330"
+  },
+  {
+    "room": "Silberman 322",
+    "building": "Silberman",
+    "floor": 3,
+    "normalizedRoomName": "silberman-322"
+  },
+  {
+    "room": "Silberman 331",
+    "building": "Silberman",
+    "floor": 3,
+    "normalizedRoomName": "silberman-331"
+  },
+  {
+    "room": "Silberman 332",
+    "building": "Silberman",
+    "floor": 3,
+    "normalizedRoomName": "silberman-332"
+  },
+  {
+    "room": "Silberman 326",
+    "building": "Silberman",
+    "floor": 3,
+    "normalizedRoomName": "silberman-326"
+  },
+  {
+    "room": "Silberman C-05",
+    "building": "Silberman",
+    "floor": "C",
+    "normalizedRoomName": "silberman-c-05"
+  },
+  {
+    "room": "Silberman 324",
+    "building": "Silberman",
+    "floor": 3,
+    "normalizedRoomName": "silberman-324"
+  },
+  {
+    "room": "Silberman 320",
+    "building": "Silberman",
+    "floor": 3,
+    "normalizedRoomName": "silberman-320"
+  },
+  {
+    "room": "Silberman 318",
+    "building": "Silberman",
+    "floor": 3,
+    "normalizedRoomName": "silberman-318"
+  },
+  {
+    "room": "Silberman 115",
+    "building": "Silberman",
+    "floor": 1,
+    "normalizedRoomName": "silberman-115"
+  },
+  {
+    "room": "Silberman 328",
+    "building": "Silberman",
+    "floor": 3,
+    "normalizedRoomName": "silberman-328"
+  },
+  {
+    "room": "Silberman 220",
+    "building": "Silberman",
+    "floor": 2,
+    "normalizedRoomName": "silberman-220"
+  },
+  {
+    "room": "Silberman 215",
+    "building": "Silberman",
+    "floor": 2,
+    "normalizedRoomName": "silberman-215"
+  },
+  {
+    "room": "Silberman 216",
+    "building": "Silberman",
+    "floor": 2,
+    "normalizedRoomName": "silberman-216"
+  },
+  {
+    "room": "West Bldg WB130",
+    "building": "West Building",
+    "floor": 1,
+    "normalizedRoomName": "west-bldg-wb130"
+  },
+  {
+    "room": "West Bldg W424West Bldg W413",
+    "building": "West Building",
+    "floor": 4,
+    "normalizedRoomName": "west-bldg-w424west-bldg-w413"
+  },
+  {
+    "room": "East Bldg E512East Bldg E512",
+    "building": "East Building",
+    "floor": 5,
+    "normalizedRoomName": "east-bldg-e512east-bldg-e512"
+  },
+  {
+    "room": "West Bldg W504",
+    "building": "West Building",
+    "floor": 5,
+    "normalizedRoomName": "west-bldg-w504"
+  },
+  {
+    "room": "Baker BTB260",
+    "building": "Baker Building",
+    "floor": 2,
+    "normalizedRoomName": "baker-btb260"
+  },
+  {
+    "room": "Baker BTB220",
+    "building": "Baker Building",
+    "floor": 2,
+    "normalizedRoomName": "baker-btb220"
+  },
+  {
+    "room": "Baker BTB430",
+    "building": "Baker Building",
+    "floor": 4,
+    "normalizedRoomName": "baker-btb430"
+  },
+  {
+    "room": "Baker BTB420",
+    "building": "Baker Building",
+    "floor": 4,
+    "normalizedRoomName": "baker-btb420"
+  },
+  {
+    "room": "ThomHunter 118",
+    "building": "Thomas Hunter Hall",
+    "floor": 1,
+    "normalizedRoomName": "thomhunter-118"
+  },
+  {
+    "room": "North Bldg 537",
+    "building": "North Building",
+    "floor": 5,
+    "normalizedRoomName": "north-bldg-537"
+  },
+  {
+    "room": "Baker BTB680",
+    "building": "Baker Building",
+    "floor": 6,
+    "normalizedRoomName": "baker-btb680"
+  },
+  {
+    "room": "West Bldg W1640",
+    "building": "West Building",
+    "floor": 16,
+    "normalizedRoomName": "west-bldg-w1640"
+  },
+  {
+    "room": "West Bldg W1639",
+    "building": "West Building",
+    "floor": 16,
+    "normalizedRoomName": "west-bldg-w1639"
+  },
+  {
+    "room": "West Bldg W606",
+    "building": "West Building",
+    "floor": 6,
+    "normalizedRoomName": "west-bldg-w606"
+  },
+  {
+    "room": "West Bldg W1736",
+    "building": "West Building",
+    "floor": 17,
+    "normalizedRoomName": "west-bldg-w1736"
+  },
+  {
+    "room": "West Bldg W608",
+    "building": "West Building",
+    "floor": 6,
+    "normalizedRoomName": "west-bldg-w608"
+  }
+]

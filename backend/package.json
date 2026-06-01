@@ -6,7 +6,9 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "scrape": "node scraper.js",
-    "seed": "node seed.js"
+    "seed": "node seed.js",
+    "scrape:inventory": "node scraper-inventory.js",
+    "seed:rooms": "node seed-rooms.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

@@ -362,7 +362,7 @@ app.post('/api/occupancy', requireAuth, async (req, res) => {
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const dayAbbrev = DAY_NAME_TO_ABBREV[dayNames[now.getDay()]] ?? 'Mo';
     const timeMinutes = now.getHours() * 60 + now.getMinutes();
-    const { availableFor } = computeAvailability(room, dayAbbrev, timeMinutes);
+    const { availableFor } = computeAvailability(room, dayAbbrev, timeMinutes, todayDateStr());
     expiresAt = availableFor !== null
       ? new Date(now.getTime() + availableFor * 60 * 1000)
       : (() => { const d = new Date(now); d.setHours(23, 59, 59, 0); return d; })();
@@ -401,6 +401,46 @@ app.delete('/api/occupancy/:room', requireAuth, async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 });
+
+// ── Schedule date/room helpers ────────────────────────────────────────────────
+
+// Parse "MM/DD/YYYY - MM/DD/YYYY" → { meetingStartDate: "YYYY-MM-DD", meetingEndDate: "YYYY-MM-DD" }
+function parseMeetingDates(meetingDates) {
+  if (!meetingDates) return { meetingStartDate: null, meetingEndDate: null };
+  const m = meetingDates.match(/(\d{2})\/(\d{2})\/(\d{4})\s*-\s*(\d{2})\/(\d{2})\/(\d{4})/);
+  if (!m) return { meetingStartDate: null, meetingEndDate: null };
+  return {
+    meetingStartDate: `${m[3]}-${m[1]}-${m[2]}`,
+    meetingEndDate:   `${m[6]}-${m[4]}-${m[5]}`,
+  };
+}
+
+// Returns false for purely online rooms (Online-Synchronous, Online-Asynchronous) and Off Campus.
+// Hybrid modes that have a physical room are kept — the building filter handles them.
+function isPhysicalRoom(doc) {
+  const room = (doc.room || '').trim();
+  const mode = (doc.instructionMode || '').trim();
+  if (!room || /\bTBA\b/i.test(room)) return false;
+  if (/^online/i.test(room)) return false;
+  if (/^online\s+(synchronous|asynchronous|mix)/i.test(mode)) return false;
+  return true;
+}
+
+// YYYY-MM-DD string comparison (ISO lexicographic order works for date-only strings).
+// If either boundary is missing we assume the class is always in-range.
+function isDateInRange(selectedDate, meetingStartDate, meetingEndDate) {
+  if (!selectedDate || !meetingStartDate || !meetingEndDate) return true;
+  return selectedDate >= meetingStartDate && selectedDate <= meetingEndDate;
+}
+
+// Today's date as YYYY-MM-DD in local time (avoids UTC-shift bugs).
+function todayDateStr() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 
 // ── JSON schedule helpers ─────────────────────────────────────────────────────
 
@@ -480,15 +520,22 @@ function minutesToTimeStr(minutes) {
 
 // ── Load + preprocess schedule ─────────────────────────────────────────────────
 
-let schedule = [];
+let schedule     = []; // Summer 2026 — used only for current-term occupancy
+let roomInventory = []; // Spring 2026 + supplemented — source of truth for all known rooms
 
 function processRaw(raw) {
   return raw
-    .map(s => ({
-      ...s,
-      building:   getBuildingFromRoom(s.room),
-      timeBlocks: (s.daysAndTimes || []).map(parseDaysAndTime).filter(Boolean),
-    }))
+    .filter(s => isPhysicalRoom(s))
+    .map(s => {
+      const { meetingStartDate, meetingEndDate } = parseMeetingDates(s.meetingDates);
+      return {
+        ...s,
+        building: getBuildingFromRoom(s.room),
+        meetingStartDate,
+        meetingEndDate,
+        timeBlocks: (s.daysAndTimes || []).map(parseDaysAndTime).filter(Boolean),
+      };
+    })
     .filter(s => s.building !== null);
 }
 
@@ -517,16 +564,86 @@ async function loadSchedule() {
   }
 }
 
+// Adds any Summer-schedule rooms that aren't already in the inventory.
+// Ensures rooms that exist only in the current term are still tracked.
+function supplementInventoryFromSchedule() {
+  const known = new Set(roomInventory.map(r => r.room));
+  let added = 0;
+  for (const s of schedule) {
+    if (!known.has(s.room)) {
+      const roomNumber = getRoomNumber(s.room);
+      roomInventory.push({
+        room:               s.room,
+        building:           s.building,
+        floor:              getFloor(roomNumber),
+        normalizedRoomName: s.room.toLowerCase().replace(/\s+/g, '-'),
+      });
+      known.add(s.room);
+      added++;
+    }
+  }
+  if (added > 0) console.log(`  + ${added} Summer-only rooms added to inventory`);
+}
+
+async function loadRoomInventory() {
+  // 1. Try MongoDB room_inventory collection (populated by npm run seed:rooms)
+  if (db) {
+    try {
+      const raw = await db.collection('room_inventory').find({}, { projection: { _id: 0 } }).toArray();
+      if (raw.length > 0) {
+        roomInventory = raw;
+        const term = raw[0]?.sourceTerm ?? 'unknown';
+        console.log(`Loaded ${roomInventory.length} rooms from MongoDB room_inventory (source: ${term})`);
+        supplementInventoryFromSchedule();
+        return;
+      }
+    } catch (err) {
+      console.warn('Could not load room_inventory from MongoDB:', err.message);
+    }
+  }
+
+  // 2. Try inventory JSON file (generated by npm run scrape:inventory)
+  try {
+    const raw = JSON.parse(
+      readFileSync(path.join(__dirname, 'data', 'hunter-room-inventory-spring-2026.json'), 'utf8')
+    );
+    if (raw.length > 0) {
+      roomInventory = raw;
+      console.log(`Loaded ${roomInventory.length} rooms from inventory JSON`);
+      supplementInventoryFromSchedule();
+      return;
+    }
+  } catch { /* fall through */ }
+
+  // 3. Fall back to deriving rooms from the current Summer schedule only
+  console.warn('No room inventory found — deriving rooms from Summer schedule (limited coverage)');
+  const seen = new Set();
+  for (const s of schedule) {
+    if (!seen.has(s.room)) {
+      seen.add(s.room);
+      const roomNumber = getRoomNumber(s.room);
+      roomInventory.push({
+        room:               s.room,
+        building:           s.building,
+        floor:              getFloor(roomNumber),
+        normalizedRoomName: s.room.toLowerCase().replace(/\s+/g, '-'),
+      });
+    }
+  }
+  console.log(`Derived ${roomInventory.length} rooms from current schedule`);
+}
+
 const DAY_NAME_TO_ABBREV = {
   Monday: 'Mo', Tuesday: 'Tu', Wednesday: 'We', Thursday: 'Th',
   Friday: 'Fr', Saturday: 'Sa', Sunday: 'Su',
 };
 
-function computeAvailability(room, dayAbbrev, timeMinutes) {
+function computeAvailability(room, dayAbbrev, timeMinutes, selectedDate) {
   let nextStart = Infinity;
   let nextTopic = null;
   for (const s of schedule) {
     if (s.room !== room) continue;
+    if (!isDateInRange(selectedDate, s.meetingStartDate, s.meetingEndDate)) continue;
     for (const b of s.timeBlocks) {
       if (b.days.includes(dayAbbrev) && b.startMinutes > timeMinutes) {
         if (b.startMinutes < nextStart) {
@@ -548,40 +665,39 @@ function computeAvailability(room, dayAbbrev, timeMinutes) {
 
 // ── JSON-based API routes ─────────────────────────────────────────────────────
 
-// GET /api/rooms/schedule?room=...&day=Monday&time=14:30  →  upcoming classes for a room
+// GET /api/rooms/schedule?room=...&day=Monday&time=14:30&date=2026-06-10  →  upcoming classes for a room
 app.get('/api/rooms/schedule', (req, res) => {
-  const { room, day, time } = req.query;
+  const { room, day, time, date } = req.query;
   if (!room || !day || !time) {
     return res.status(400).json({ error: 'room, day, and time are required' });
   }
-  const dayAbbrev = DAY_NAME_TO_ABBREV[day] ?? day;
+  const dayAbbrev   = DAY_NAME_TO_ABBREV[day] ?? day;
   const [hStr, mStr] = time.split(':');
-  const timeMinutes = parseInt(hStr) * 60 + parseInt(mStr || '0');
+  const timeMinutes  = parseInt(hStr) * 60 + parseInt(mStr || '0');
+  const selectedDate = date || todayDateStr();
 
   const upcoming = [];
-  const seenTimes = new Set(); // tracks start times
-  const seenCourses = new Set(); // tracks course names
-  
+  const seenTimes   = new Set();
+  const seenCourses = new Set();
+
   for (const s of schedule) {
     if (s.room !== room) continue;
+    if (!isDateInRange(selectedDate, s.meetingStartDate, s.meetingEndDate)) continue;
     for (const b of s.timeBlocks) {
       if (b.days.includes(dayAbbrev) && b.endMinutes > timeMinutes) {
         const courseName = s.courseTopic || s.subjectCode;
-        // skip if we've already seen this start time OR this course
         if (seenTimes.has(b.startMinutes) || seenCourses.has(courseName)) continue;
-        
         seenTimes.add(b.startMinutes);
         seenCourses.add(courseName);
-        
         upcoming.push({
-          courseTopic: courseName,
-          subjectCode: s.subjectCode,
-          section:     s.section,
-          instructor:  s.instructor,
-          startTime:   minutesToTimeStr(b.startMinutes),
-          endTime:     minutesToTimeStr(b.endMinutes),
+          courseTopic:  courseName,
+          subjectCode:  s.subjectCode,
+          section:      s.section,
+          instructor:   s.instructor,
+          startTime:    minutesToTimeStr(b.startMinutes),
+          endTime:      minutesToTimeStr(b.endMinutes),
           startMinutes: b.startMinutes,
-          isCurrent:   b.startMinutes <= timeMinutes,
+          isCurrent:    b.startMinutes <= timeMinutes,
         });
       }
     }
@@ -591,27 +707,29 @@ app.get('/api/rooms/schedule', (req, res) => {
   res.json(upcoming.map(({ startMinutes, ...rest }) => rest));
 });
 
-// GET /api/rooms/buildings  →  ["Baker Building", "East Building", ...]
+// GET /api/rooms/buildings  →  ["Baker Building", "East Building", ...]  (from full inventory)
 app.get('/api/rooms/buildings', (req, res) => {
-  const buildings = [...new Set(schedule.map(s => s.building))].sort();
+  const buildings = [...new Set(roomInventory.map(r => r.building).filter(Boolean))].sort();
   res.json(buildings);
 });
 
-// GET /api/rooms/available?building=West%20Building&day=Tuesday&time=14:30&floor=3
+// GET /api/rooms/available?building=West%20Building&day=Tuesday&time=14:30&floor=3&date=2026-06-10
 app.get('/api/rooms/available', async (req, res) => {
-  const { building, day, time, floor } = req.query;
+  const { building, day, time, floor, date } = req.query;
   if (!day || !time) {
     return res.status(400).json({ error: 'day and time query params are required' });
   }
 
-  const dayAbbrev = DAY_NAME_TO_ABBREV[day] ?? day;
+  const dayAbbrev    = DAY_NAME_TO_ABBREV[day] ?? day;
   const [hStr, mStr] = time.split(':');
-  const timeMinutes = parseInt(hStr) * 60 + parseInt(mStr || '0');
-  const floorFilter = floor ? floor.toString().toUpperCase() : null;
+  const timeMinutes  = parseInt(hStr) * 60 + parseInt(mStr || '0');
+  const floorFilter  = floor ? floor.toString().toUpperCase() : null;
+  const selectedDate = date || todayDateStr();
 
   const occupied = new Set();
   for (const s of schedule) {
     if (building && s.building !== building) continue;
+    if (!isDateInRange(selectedDate, s.meetingStartDate, s.meetingEndDate)) continue;
     for (const b of s.timeBlocks) {
       if (b.days.includes(dayAbbrev) && timeMinutes >= b.startMinutes && timeMinutes < b.endMinutes) {
         occupied.add(s.room);
@@ -619,22 +737,18 @@ app.get('/api/rooms/available', async (req, res) => {
     }
   }
 
-  const roomMap = new Map();
-  for (const s of schedule) {
-    if (building && s.building !== building) continue;
-    if (!roomMap.has(s.room)) roomMap.set(s.room, s.building);
-  }
-
+  // Room list comes from inventory (Spring + supplemented) — not Summer schedule
   const results = [];
-  for (const [room, bldg] of roomMap) {
-    if (occupied.has(room)) continue;
-    const roomNumber = getRoomNumber(room);
-    const roomFloor = getFloor(roomNumber);
-    if (floorFilter !== null && roomFloor.toString().toUpperCase() !== floorFilter) continue;
-    const { nextClass, availableFor } = computeAvailability(room, dayAbbrev, timeMinutes);
+  for (const r of roomInventory) {
+    if (building && r.building !== building) continue;
+    if (occupied.has(r.room)) continue;
+    const roomNumber = getRoomNumber(r.room);
+    const roomFloor  = r.floor;
+    if (floorFilter !== null && String(roomFloor).toUpperCase() !== floorFilter) continue;
+    const { nextClass, availableFor } = computeAvailability(r.room, dayAbbrev, timeMinutes, selectedDate);
     results.push({
-      id:                        room,
-      building:                  bldg,
+      id:                        r.room,
+      building:                  r.building,
       roomNumber,
       floor:                     roomFloor,
       availableFor,
@@ -671,73 +785,15 @@ app.get('/api/rooms/available', async (req, res) => {
 
 // GET /api/debug/summary
 app.get('/api/debug/summary', (_req, res) => {
-  const rooms   = [...new Set(schedule.map(s => s.room))];
-  const codes   = [...new Set(schedule.map(s => s.subjectCode))].sort();
-  const sample  = rooms.slice(0, 10);
-  res.json({
-    totalSections: schedule.length,
-    totalRooms:    rooms.length,
-    subjectCodes:  codes,
-    sampleRooms:   sample,
-  });
-});
+  const now      = new Date();
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const dayAbbrev    = DAY_NAME_TO_ABBREV[dayNames[now.getDay()]] ?? 'Mo';
+  const timeMinutes  = now.getHours() * 60 + now.getMinutes();
+  const today        = todayDateStr();
 
-// GET /api/debug/room/:room
-app.get('/api/debug/room/:room', (req, res) => {
-  const roomId   = req.params.room;
-  const day      = req.query.day  || 'Monday';
-  const time     = req.query.time || '12:00';
-  const dayAbbrev = DAY_NAME_TO_ABBREV[day] ?? day;
-  const [hStr, mStr] = time.split(':');
-  const timeMinutes  = parseInt(hStr) * 60 + parseInt(mStr || '0');
-
-  const sections = schedule.filter(s => s.room === roomId);
-  const blocks   = sections.flatMap(s =>
-    s.timeBlocks.map(b => ({
-      courseTopic: s.courseTopic,
-      subjectCode: s.subjectCode,
-      days: b.days,
-      startMinutes: b.startMinutes,
-      endMinutes:   b.endMinutes,
-      startTime:    minutesToTimeStr(b.startMinutes),
-      endTime:      minutesToTimeStr(b.endMinutes),
-    }))
-  );
-
-  const isOccupied = blocks.some(b =>
-    b.days.includes(dayAbbrev) && timeMinutes >= b.startMinutes && timeMinutes < b.endMinutes
-  );
-  const avail = computeAvailability(roomId, dayAbbrev, timeMinutes);
-
-  res.json({
-    room: roomId,
-    queriedDay: day,
-    queriedTime: time,
-    totalSections: sections.length,
-    allBlocks: blocks,
-    isOccupiedAt: isOccupied,
-    availability: avail,
-  });
-});
-
-// GET /api/rooms/all  →  all unique rooms with availability (favorites display + live stats)
-app.get('/api/rooms/all', async (req, res) => {
-  const { day, time } = req.query;
-  let dayAbbrev, timeMinutes;
-  if (day && time) {
-    dayAbbrev = DAY_NAME_TO_ABBREV[day] ?? day;
-    const [hStr, mStr] = time.split(':');
-    timeMinutes = parseInt(hStr) * 60 + parseInt(mStr || '0');
-  } else {
-    const now = new Date();
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    dayAbbrev = DAY_NAME_TO_ABBREV[dayNames[now.getDay()]] ?? 'Mo';
-    timeMinutes = now.getHours() * 60 + now.getMinutes();
-  }
-
-  // Track which rooms have a class happening right now
   const occupied = new Set();
   for (const s of schedule) {
+    if (!isDateInRange(today, s.meetingStartDate, s.meetingEndDate)) continue;
     for (const b of s.timeBlocks) {
       if (b.days.includes(dayAbbrev) && timeMinutes >= b.startMinutes && timeMinutes < b.endMinutes) {
         occupied.add(s.room);
@@ -745,23 +801,121 @@ app.get('/api/rooms/all', async (req, res) => {
     }
   }
 
-  const roomMap = new Map();
+  const buildings   = [...new Set(roomInventory.map(r => r.building).filter(Boolean))].sort();
+  const codes       = [...new Set(schedule.map(s => s.subjectCode))].sort();
+  const inventorySource = roomInventory[0]?.sourceTerm ?? 'derived from schedule';
+
+  res.json({
+    currentScheduleTerm:     'Summer 2026',
+    totalScheduleSections:   schedule.length,
+    roomInventorySource:     inventorySource,
+    totalInventoryRooms:     roomInventory.length,
+    uniqueBuildings:         buildings,
+    currentlyOccupiedRooms:  [...occupied].sort(),
+    sampleInventoryRooms:    roomInventory.slice(0, 10).map(r => r.room),
+    scheduleSubjectCodes:    codes,
+  });
+});
+
+// GET /api/debug/room/:room?day=Monday&time=17:30&date=2026-06-10
+app.get('/api/debug/room/:room', (req, res) => {
+  const roomId  = req.params.room;
+  const day     = req.query.day  || 'Monday';
+  const time    = req.query.time || '12:00';
+  const date    = req.query.date || todayDateStr();
+
+  const dayAbbrev    = DAY_NAME_TO_ABBREV[day] ?? day;
+  const [hStr, mStr] = time.split(':');
+  const timeMinutes  = parseInt(hStr) * 60 + parseInt(mStr || '0');
+
+  const sections = schedule.filter(s => s.room === roomId);
+  const blocks   = sections.flatMap(s =>
+    s.timeBlocks.map(b => ({
+      courseTopic:      s.courseTopic,
+      subjectCode:      s.subjectCode,
+      meetingDates:     s.meetingDates,
+      meetingStartDate: s.meetingStartDate,
+      meetingEndDate:   s.meetingEndDate,
+      dateInRange:      isDateInRange(date, s.meetingStartDate, s.meetingEndDate),
+      days:             b.days,
+      startTime:        minutesToTimeStr(b.startMinutes),
+      endTime:          minutesToTimeStr(b.endMinutes),
+      startMinutes:     b.startMinutes,
+      endMinutes:       b.endMinutes,
+    }))
+  );
+
+  const isOccupied = blocks.some(b =>
+    b.dateInRange &&
+    b.days.includes(dayAbbrev) &&
+    timeMinutes >= b.startMinutes &&
+    timeMinutes < b.endMinutes
+  );
+  const avail = computeAvailability(roomId, dayAbbrev, timeMinutes, date);
+
+  const upcomingOnDate = blocks
+    .filter(b => b.dateInRange && b.days.includes(dayAbbrev) && b.endMinutes > timeMinutes)
+    .sort((a, b) => a.startMinutes - b.startMinutes);
+
+  res.json({
+    room:           roomId,
+    queriedDay:     day,
+    queriedTime:    time,
+    queriedDate:    date,
+    totalSections:  sections.length,
+    allBlocks:      blocks,
+    isOccupiedAt:   isOccupied,
+    availability:   avail,
+    upcomingOnDate,
+  });
+});
+
+// GET /api/rooms/all  →  all unique rooms with availability (favorites display + live stats)
+app.get('/api/rooms/all', async (req, res) => {
+  const { day, time, date } = req.query;
+  let dayAbbrev, timeMinutes, selectedDate;
+  if (day && time) {
+    dayAbbrev = DAY_NAME_TO_ABBREV[day] ?? day;
+    const [hStr, mStr] = time.split(':');
+    timeMinutes = parseInt(hStr) * 60 + parseInt(mStr || '0');
+    selectedDate = date || todayDateStr();
+  } else {
+    const now = new Date();
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    dayAbbrev    = DAY_NAME_TO_ABBREV[dayNames[now.getDay()]] ?? 'Mo';
+    timeMinutes  = now.getHours() * 60 + now.getMinutes();
+    selectedDate = todayDateStr();
+  }
+
+  // Track which rooms have a class happening right now on the selected date
+  const occupied = new Set();
   for (const s of schedule) {
-    if (!roomMap.has(s.room)) {
-      const roomNumber = getRoomNumber(s.room);
-      const { nextClass, availableFor } = computeAvailability(s.room, dayAbbrev, timeMinutes);
-      roomMap.set(s.room, {
-        id:                        s.room,
-        building:                  s.building,
+    if (!isDateInRange(selectedDate, s.meetingStartDate, s.meetingEndDate)) continue;
+    for (const b of s.timeBlocks) {
+      if (b.days.includes(dayAbbrev) && timeMinutes >= b.startMinutes && timeMinutes < b.endMinutes) {
+        occupied.add(s.room);
+      }
+    }
+  }
+
+  // Room list from inventory — includes Spring rooms with no Summer classes
+  const roomMap = new Map();
+  for (const r of roomInventory) {
+    if (!roomMap.has(r.room)) {
+      const roomNumber = getRoomNumber(r.room);
+      const { nextClass, availableFor } = computeAvailability(r.room, dayAbbrev, timeMinutes, selectedDate);
+      roomMap.set(r.room, {
+        id:                        r.room,
+        building:                  r.building,
         roomNumber,
-        floor:                     getFloor(roomNumber),
+        floor:                     r.floor,
         availableFor,
         availableForMinutes:       availableFor,
         nextClass,
         nextClassStart:            nextClass,
         noMoreClassesToday:        nextClass === null,
         type:                      'Classroom',
-        isAvailable:               !occupied.has(s.room),
+        isAvailable:               !occupied.has(r.room),
         studentOccupancyCount:     0,
         isStudentReportedOccupied: false,
       });
@@ -919,6 +1073,7 @@ app.get('/api/filter-rooms', async (req, res) => {
 async function start() {
   await connectDB();
   await loadSchedule();
+  await loadRoomInventory(); // must run after loadSchedule (supplements from schedule)
   // TTL index: MongoDB auto-deletes expired occupancy reports
   if (db) {
     try {
